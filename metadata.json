@@ -1,0 +1,5 @@
+{
+  "name": "React Multi-File Previewer",
+  "description": "An interactive code previewer for multi-file React and TypeScript projects. Select a file from the tree to view its source code and see the live rendered component in the preview pane.",
+  "requestFramePermissions": []
+}
