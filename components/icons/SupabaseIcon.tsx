@@ -1,0 +1,22 @@
+import React from 'react';
+
+const SupabaseIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 96 96" className={className}>
+    <desc>Supabase Icon Streamline Icon: https://streamlinehq.com</desc>
+    <path fill="url(#supabase-a)" d="M55.7223 93.4383c-2.4014 3.0241-7.2705 1.3672-7.3284-2.4942l-.846-56.4773h37.9752c6.8784 0 10.7146 7.9445 6.4375 13.3315l-36.2383 45.64Z"></path>
+    <path fill="url(#supabase-b)" fillOpacity=".2" d="M55.7223 93.4383c-2.4014 3.0241-7.2705 1.3672-7.3284-2.4942l-.846-56.4773h37.9752c6.8784 0 10.7146 7.9445 6.4375 13.3315l-36.2383 45.64Z"></path>
+    <path fill="#3ecf8e" d="M40.278 2.56189c2.4014-3.024436 7.2705-1.36726 7.3284 2.49417l.3707 56.47724h-37.5c-6.87853 0-10.714819-7.9446-6.43753-13.3315L40.278 2.56189Z"></path>
+    <defs>
+      <linearGradient id="supabase-a" x1="1011.58" x2="3189.12" y1="1286.71" y2="2199.97" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#249361"></stop>
+        <stop offset="1" stopColor="#3ecf8e"></stop>
+      </linearGradient>
+      <linearGradient id="supabase-b" x1="139.561" x2="1537.44" y1="-762.054" y2="1869.38" gradientUnits="userSpaceOnUse">
+        <stop></stop>
+        <stop offset="1" stopOpacity="0"></stop>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+export default SupabaseIcon;
