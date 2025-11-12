@@ -10,7 +10,7 @@ import PillToggle from './components/PillToggle';
 import { GoogleGenAI, Type } from "@google/genai";
 import SuggestionsPage from './components/SuggestionsPage';
 import Workspace from './components/Workspace';
-import { useIntegrations } from './hooks/useIntegrations';
+import { useIntegrations, validIntegrationIds } from './hooks/useIntegrations';
 import type { Integrations, IntegrationId } from './hooks/useIntegrations';
 import VisualEditor from './components/VisualEditor';
 import ProjectsListPage from './components/ProjectsListPage';
@@ -50,6 +50,8 @@ export type AiTask = {
 export type Project = {
     id: string;
     name: string;
+    description: string;
+    createdAt: number;
     lastModified: number;
     projectState: FileNode;
     chatHistory: ChatMessage[];
@@ -174,7 +176,14 @@ function App() {
     try {
       const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
       if (storedProjects) {
-        setProjects(JSON.parse(storedProjects));
+        const loadedProjects: Project[] = JSON.parse(storedProjects);
+        // Migration for old projects
+        const migratedProjects = loadedProjects.map(p => ({
+            ...p,
+            createdAt: p.createdAt || p.lastModified, // Fallback for createdAt
+            description: p.description || `An interactive code previewer for multi-file React and TypeScript projects.` // Fallback for description
+        }));
+        setProjects(migratedProjects);
       }
     } catch (error) {
       console.error('Failed to load projects from localStorage:', error);
@@ -213,6 +222,7 @@ function App() {
     return () => clearTimeout(handler);
   }, [history, chatHistory, currentProjectId]);
 
+  const currentProject = useMemo(() => projects.find(p => p.id === currentProjectId), [projects, currentProjectId]);
   const projectFiles = history.length > 0 ? history[history.length - 1].state : null;
   const ai = useMemo(() => new GoogleGenAI({ apiKey: process.env.API_KEY as string }), []);
 
@@ -377,7 +387,10 @@ Only respond with the JSON object. Do not add any markdown formatting.
       }
       if (responseJson.requiredIntegrations && responseJson.requiredIntegrations.length > 0) {
         const newRequirements = responseJson.requiredIntegrations.filter(
-          (req: RequiredIntegration) => !isConnected(req.id) && !currentSkippedIntegrations.includes(req.id)
+          (req: RequiredIntegration) => 
+            validIntegrationIds.includes(req.id) &&
+            !isConnected(req.id) && 
+            !currentSkippedIntegrations.includes(req.id)
         );
         if (newRequirements.length > 0) {
             setRequiredIntegrations(newRequirements);
@@ -556,12 +569,15 @@ Only respond with the JSON object. Do not add any markdown formatting.
 
   const handleCreateNewProject = () => {
     const newHistoryId = crypto.randomUUID();
+    const now = Date.now();
     const newProject: Project = {
         id: crypto.randomUUID(),
         name: `New Project ${projects.length + 1}`,
-        lastModified: Date.now(),
+        description: "A new AI-generated project.",
+        createdAt: now,
+        lastModified: now,
         projectState: mockProject,
-        history: [{ state: mockProject, timestamp: Date.now(), uuid: newHistoryId }],
+        history: [{ state: mockProject, timestamp: now, uuid: newHistoryId }],
         chatHistory: [{ author: 'ai', content: "Hello! I can build full-stack apps with a persistent state and a unique style. I'll also automatically fix any errors that occur. Try asking me to 'create a simple todo app'." }],
         previewImage: defaultPreview,
     };
@@ -605,6 +621,20 @@ Only respond with the JSON object. Do not add any markdown formatting.
     setHistory([]);
     setChatHistory([]);
     setView('projects');
+  };
+
+  const handleUpdateProjectDetails = (projectId: string, updates: { name?: string; description?: string }) => {
+    setProjects(prevProjects =>
+      prevProjects.map(p =>
+        p.id === projectId
+          ? {
+              ...p,
+              ...updates,
+              lastModified: Date.now(),
+            }
+          : p
+      )
+    );
   };
 
   const compileProjectForDeployment = useCallback(async (): Promise<string> => {
@@ -700,7 +730,7 @@ Only respond with the JSON object. Do not add any markdown formatting.
             <html lang="en">
               <head>
                 <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta name="viewport" content="width=device-width, initial-scale-1.0" />
                 <title>${appName}</title>
                 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
                 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -860,6 +890,8 @@ Only respond with the JSON object. Do not add any markdown formatting.
                   setAppName={setAppName}
                   deployState={deployState}
                   onDeploy={handleDeploy}
+                  project={currentProject ?? null}
+                  onUpdateProjectDetails={handleUpdateProjectDetails}
                 />
             )}
              {rightPaneView === 'visual_edit' && (

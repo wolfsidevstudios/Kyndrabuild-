@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import type { FileNode } from '../types';
 import type { Integrations, IntegrationId } from '../hooks/useIntegrations';
-import type { HistoryEntry, DeployState } from '../../App';
+import type { HistoryEntry, DeployState, Project } from '../../App';
 import BackendViewer from './BackendViewer';
 import Database from './workspace/Database';
 import ProjectDetails from './workspace/ProjectDetails';
@@ -26,6 +26,8 @@ interface WorkspaceProps {
   setAppName: (name: string) => void;
   deployState: DeployState;
   onDeploy: () => void;
+  project: Project | null;
+  onUpdateProjectDetails: (projectId: string, updates: { name?: string; description?: string }) => void;
 }
 
 type WorkspaceView = 'project' | 'backend' | 'database' | 'auth' | 'payments' | 'history' | 'deployment';
@@ -62,6 +64,8 @@ const Workspace: React.FC<WorkspaceProps> = ({
   setAppName,
   deployState,
   onDeploy,
+  project,
+  onUpdateProjectDetails
 }) => {
   const [view, setView] = useState<WorkspaceView>('project');
 
@@ -85,7 +89,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
         <NavItem icon={<HistoryIcon className="h-5 w-5" />} label="History" isActive={view === 'history'} onClick={() => setView('history')} />
       </aside>
       <main className="flex-1 overflow-y-auto">
-        {view === 'project' && <ProjectDetails />}
+        {view === 'project' && <ProjectDetails project={project} deployState={deployState} onUpdateDetails={onUpdateProjectDetails} />}
         {view === 'backend' && <BackendViewer files={files} />}
         {view === 'database' && (
           <Database 

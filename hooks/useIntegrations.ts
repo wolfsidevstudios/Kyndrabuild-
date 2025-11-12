@@ -16,6 +16,20 @@ export type IntegrationId =
   // FIX: Add pexels_api to support media integrations.
   | 'pexels_api';
 
+export const validIntegrationIds: IntegrationId[] = [
+  'firebase_auth',
+  'supabase_auth',
+  'firebase_db',
+  'supabase_db',
+  'polar_payments',
+  'stripe_payments',
+  'square_payments',
+  'vercel_deployment',
+  'kindra_google_auth',
+  'kindra_github_auth',
+  'pexels_api',
+];
+
 export interface Integrations {
   firebase_auth?: { apiKey: string; authDomain: string; projectId: string; storageBucket: string };
   supabase_auth?: { url: string; anonKey: string };
