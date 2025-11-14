@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PolarIcon from '../icons/PolarIcon';
 import StripeIcon from '../icons/StripeIcon';
@@ -47,7 +48,7 @@ const PolarConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, on
     return (
         <div>
             <ConfigHeader title="Configure Polar" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Personal Access Token" name="token" value={config.token} onChange={handleChange} />
                 <div className="pt-2">
                     <button onClick={() => onSave(config)} className="bg-gray-800 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors">
@@ -67,7 +68,7 @@ const StripeConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
     return (
         <div>
             <ConfigHeader title="Configure Stripe" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Publishable Key" name="publishableKey" value={config.publishableKey} onChange={handleChange} />
                 <InputField label="Secret Key" name="secretKey" value={config.secretKey} onChange={handleChange} />
                 <div className="pt-2">
@@ -88,7 +89,7 @@ const SquareConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
     return (
         <div>
             <ConfigHeader title="Configure Square" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Application ID" name="appId" value={config.appId} onChange={handleChange} />
                 <InputField label="Access Token" name="accessToken" value={config.accessToken} onChange={handleChange} />
                 <div className="pt-2">
@@ -103,7 +104,7 @@ const SquareConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
 
 
 const PaymentProviderCard = ({ title, description, icon, onConfigure, isConnected }: { title: string, description: string, icon: React.ReactNode, onConfigure: () => void, isConnected: boolean }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-start">
+  <div className="bg-gray-100 p-6 rounded-2xl flex flex-col items-start">
     <div className="flex justify-between items-start w-full">
         {icon}
         {isConnected && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Connected</span>}
@@ -112,7 +113,7 @@ const PaymentProviderCard = ({ title, description, icon, onConfigure, isConnecte
     <p className="text-gray-600 text-sm mb-4 flex-grow">{description}</p>
     <button
       onClick={onConfigure}
-      className="w-full bg-gray-100 text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors mt-auto"
+      className="w-full bg-white text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-white/80 transition-colors mt-auto"
     >
       {isConnected ? 'Manage' : 'Configure'}
     </button>
@@ -157,9 +158,9 @@ const Payments: React.FC<PaymentsProps> = ({ integrations, setIntegration, isCon
       default:
         return (
           <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
-            <p className="text-gray-600 mb-8">Integrate payments to monetize your application.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Payments</h1>
+            <p className="text-gray-600 mb-6">Integrate payments to monetize your application.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <PaymentProviderCard 
                 title="Polar"
                 description="The creator platform for developers. Fund your open source projects with subscriptions, donations, and issue funding."
@@ -188,10 +189,8 @@ const Payments: React.FC<PaymentsProps> = ({ integrations, setIntegration, isCon
   };
 
   return (
-    <div className="p-6 sm:p-8 h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
+    <div>
         {renderContent()}
-      </div>
     </div>
   );
 };

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import VercelIcon from '../icons/VercelIcon';
 import type { Integrations, IntegrationId } from '../../hooks/useIntegrations';
-import type { DeployState } from '../../../App';
+import type { DeployState, KyndraDeployState } from '../../../App';
+import SparkleIcon from '../icons/SparkleIcon';
 
 interface DeploymentProps {
     integrations: Integrations;
@@ -13,6 +15,8 @@ interface DeploymentProps {
     setAppName: (name: string) => void;
     deployState: DeployState;
     onDeploy: () => void;
+    kyndraDeployState: KyndraDeployState;
+    onKyndraDeploy: () => void;
 }
 
 // Reusable components
@@ -36,7 +40,7 @@ const InputField = ({ label, name, value, onChange, placeholder = '' }: { label:
             name={name}
             value={value}
             onChange={onChange}
-            className="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-800"
+            className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-800"
             placeholder={placeholder}
         />
     </div>
@@ -83,7 +87,7 @@ const VercelConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
     return (
         <div>
             <ConfigHeader title="Configure Vercel" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Personal Access Token" name="token" value={token} onChange={handleChange} />
                 {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
                 <div className="pt-2">
@@ -101,7 +105,7 @@ const VercelConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
 };
 
 const DeploymentProviderCard = ({ title, description, icon, onConfigure, isConnected }: { title: string, description: string, icon: React.ReactNode, onConfigure: () => void, isConnected: boolean }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-start">
+  <div className="bg-gray-100 p-6 rounded-2xl flex flex-col items-start">
     <div className="flex justify-between items-start w-full">
         {icon}
         {isConnected && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Connected</span>}
@@ -110,7 +114,7 @@ const DeploymentProviderCard = ({ title, description, icon, onConfigure, isConne
     <p className="text-gray-600 text-sm mb-4 flex-grow">{description}</p>
     <button
       onClick={onConfigure}
-      className="w-full bg-gray-100 text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors mt-auto"
+      className="w-full bg-white text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-white/80 transition-colors mt-auto"
     >
       {isConnected ? 'Manage' : 'Configure'}
     </button>
@@ -129,7 +133,7 @@ const VercelDeploymentManager: React.FC<{
     const isAuthError = deployState.error && deployState.error.includes('Not authorized');
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-gray-100 p-6 rounded-2xl">
             <div className="flex justify-between items-start mb-2">
                 <h2 className="text-xl font-bold text-gray-900">Deploy to Vercel</h2>
                  {user && (
@@ -143,7 +147,7 @@ const VercelDeploymentManager: React.FC<{
                         </div>
                         <button
                             onClick={onReconfigure}
-                            className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
+                            className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500"
                             title="Change Vercel Account"
                         >
                             <span className="material-symbols-outlined text-lg">logout</span>
@@ -154,7 +158,7 @@ const VercelDeploymentManager: React.FC<{
             <p className="text-gray-600 mb-6">Publish your project to a live URL on Vercel's global network.</p>
 
             <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center bg-gray-100 rounded-full border border-gray-200 h-10 transition-all focus-within:border-gray-800 focus-within:ring-2 focus-within:ring-gray-800/20 flex-grow">
+                <div className="flex items-center bg-white rounded-full border border-gray-200 h-10 transition-all focus-within:border-gray-800 focus-within:ring-2 focus-within:ring-gray-800/20 flex-grow">
                     <input
                         type="text"
                         placeholder="your-app-name"
@@ -216,7 +220,19 @@ const VercelDeploymentManager: React.FC<{
 };
 
 
-const Deployment: React.FC<DeploymentProps> = ({ integrations, setIntegration, isConnected, onConfigured, activeConfigId, appName, setAppName, deployState, onDeploy }) => {
+const Deployment: React.FC<DeploymentProps> = ({ 
+    integrations, 
+    setIntegration, 
+    isConnected, 
+    onConfigured, 
+    activeConfigId, 
+    appName, 
+    setAppName, 
+    deployState, 
+    onDeploy, 
+    kyndraDeployState, 
+    onKyndraDeploy
+}) => {
   const [configView, setConfigView] = useState<'overview' | 'vercel'>('overview');
 
   useEffect(() => {
@@ -229,50 +245,74 @@ const Deployment: React.FC<DeploymentProps> = ({ integrations, setIntegration, i
     setConfigView('overview');
   };
 
-  const renderContent = () => {
-    if (!isConnected('vercel_deployment') || configView === 'vercel') {
-        return <VercelConfig 
-            onBack={() => setConfigView('overview')} 
-            initialConfig={integrations.vercel_deployment}
-            onSave={(config) => handleSave('vercel_deployment', 'Vercel', config)}
-        />;
-    }
-
-    if (!integrations.vercel_deployment?.user && configView === 'overview') {
-        return (
-            <>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment</h1>
-              <p className="text-gray-600 mb-8">Publish your application to the web.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <DeploymentProviderCard 
+  return (
+    <div className="p-4">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Deployment</h1>
+            <p className="text-gray-600">Publish your application to the web.</p>
+        </div>
+        
+        <div className="bg-gray-100 p-6 rounded-2xl">
+            <div className="flex items-center gap-3 mb-2">
+                <SparkleIcon className="h-6 w-6 text-purple-600" />
+                <h2 className="text-xl font-bold text-gray-900">Kyndra Build Hosting</h2>
+            </div>
+            <p className="text-gray-600 mb-6">Instantly publish and share your project with our integrated, zero-config hosting.</p>
+            <div className="flex items-center gap-3 mb-6">
+                 <div className="flex items-center bg-white rounded-full border border-gray-200 h-10 transition-all focus-within:border-gray-800 focus-within:ring-2 focus-within:ring-gray-800/20 flex-grow">
+                    <input
+                        type="text"
+                        placeholder="your-app-name"
+                        className="bg-transparent pl-4 pr-1 text-sm w-full focus:outline-none text-gray-800"
+                        value={appName}
+                        onChange={(e) => setAppName(e.target.value.replace(/[^a-z0-9-]/g, ''))}
+                    />
+                    <span className="text-sm text-gray-400 border-l border-gray-300 pl-2 pr-4">.kyndrabuild.app</span>
+                </div>
+                <button 
+                    onClick={onKyndraDeploy}
+                    disabled={!appName}
+                    className="px-5 py-2 h-10 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                   Publish
+                </button>
+            </div>
+            {kyndraDeployState.url && (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                    <p className="text-sm text-green-800 font-medium">🚀 Project published! Your app is live at:</p>
+                    <a href={kyndraDeployState.url} target="_blank" rel="noopener noreferrer" className="text-green-900 font-mono text-sm underline hover:text-green-700 break-all">{kyndraDeployState.url}</a>
+                </div>
+            )}
+        </div>
+        
+        {isConnected('vercel_deployment') ? (
+            <VercelDeploymentManager 
+                appName={appName}
+                setAppName={setAppName}
+                deployState={deployState}
+                onDeploy={onDeploy}
+                onReconfigure={() => setConfigView('vercel')}
+                user={integrations.vercel_deployment?.user || null}
+            />
+        ) : (
+             <DeploymentProviderCard 
                   title="Vercel"
                   description="A platform for frontend frameworks and static sites, built to integrate with your headless content, commerce, or database."
                   icon={<VercelIcon className="h-10 w-10 text-black" />}
                   onConfigure={() => setConfigView('vercel')}
-                  isConnected={isConnected('vercel_deployment')}
+                  isConnected={false}
                 />
-              </div>
-            </>
-          );
-    }
-    
-    // If connected, show the deployment manager
-    return (
-        <VercelDeploymentManager 
-            appName={appName}
-            setAppName={setAppName}
-            deployState={deployState}
-            onDeploy={onDeploy}
-            onReconfigure={() => setConfigView('vercel')}
-            user={integrations.vercel_deployment?.user || null}
-        />
-    )
-  };
+        )}
+        
+        {configView === 'vercel' && !isConnected('vercel_deployment') && (
+            <VercelConfig 
+                onBack={() => setConfigView('overview')} 
+                initialConfig={integrations.vercel_deployment}
+                onSave={(config) => handleSave('vercel_deployment', 'Vercel', config)}
+            />
+        )}
 
-  return (
-    <div className="p-6 sm:p-8 h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        {renderContent()}
       </div>
     </div>
   );

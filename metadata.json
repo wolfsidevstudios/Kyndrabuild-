@@ -1,5 +1,5 @@
 {
-  "name": "React Multi-File Previewer",
-  "description": "An interactive code previewer for multi-file React and TypeScript projects. Select a file from the tree to view its source code and see the live rendered component in the preview pane.",
+  "name": "Kyndra Mobile App Builder",
+  "description": "An AI-powered mobile app builder that lets you create, edit, and preview apps for phones and tablets in a streamlined, mobile-first interface.",
   "requestFramePermissions": []
 }

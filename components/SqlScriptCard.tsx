@@ -1,12 +1,16 @@
+
 import React, { useState } from 'react';
 import type { SqlScript } from '../../App';
 import SupabaseIcon from './icons/SupabaseIcon';
 import FirebaseIcon from './icons/FirebaseIcon';
 import SqlSyntaxHighlighter from './utils/sqlSyntaxHighlight';
+import type { Integrations } from '../../hooks/useIntegrations';
+
 
 interface SqlScriptCardProps {
   script: SqlScript;
   onDismiss: () => void;
+  integrations: Integrations;
 }
 
 const getIcon = (dbType: 'supabase' | 'firestore') => {
@@ -15,7 +19,7 @@ const getIcon = (dbType: 'supabase' | 'firestore') => {
     return <span className="material-symbols-outlined text-2xl text-gray-500">database</span>;
 }
 
-const SqlScriptCard: React.FC<SqlScriptCardProps> = ({ script, onDismiss }) => {
+const SqlScriptCard: React.FC<SqlScriptCardProps> = ({ script, onDismiss, integrations }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -23,6 +27,11 @@ const SqlScriptCard: React.FC<SqlScriptCardProps> = ({ script, onDismiss }) => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  
+  const isSupabase = script.databaseType === 'supabase';
+  const supabaseUrl = isSupabase ? integrations.supabase_db?.url : null;
+  const projectRef = supabaseUrl ? supabaseUrl.match(/https:\/\/(.*?)\.supabase\.co/)?.[1] : null;
+  const sqlEditorUrl = projectRef ? `https://app.supabase.com/project/${projectRef}/sql/new` : null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 max-w-sm">
@@ -45,17 +54,30 @@ const SqlScriptCard: React.FC<SqlScriptCardProps> = ({ script, onDismiss }) => {
             <button 
                 onClick={handleCopy}
                 className="absolute top-2 right-2 p-1.5 bg-white/10 rounded-md text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                title="Copy script"
             >
                 <span className="material-symbols-outlined text-base">{copied ? 'done' : 'content_copy'}</span>
             </button>
         </div>
         
-        <button 
-            onClick={onDismiss}
-            className="w-full mt-3 bg-gray-100 text-gray-800 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
-        >
-            I've run this script
-        </button>
+        <div className="mt-3 flex flex-col gap-2">
+            {sqlEditorUrl && (
+                <a 
+                    href={sqlEditorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-gray-800 text-white py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors text-center"
+                >
+                    Open Supabase SQL Editor
+                </a>
+            )}
+             <button 
+                onClick={onDismiss}
+                className="w-full bg-gray-100 text-gray-800 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+            >
+                {sqlEditorUrl ? "I've run this" : "Dismiss"}
+            </button>
+        </div>
     </div>
   );
 };

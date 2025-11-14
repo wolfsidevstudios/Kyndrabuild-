@@ -4,9 +4,10 @@ import MarkdownRenderer from './MarkdownRenderer';
 import SparkleIcon from './icons/SparkleIcon';
 import IntegrationCard from './IntegrationCard';
 import SqlScriptCard from './SqlScriptCard';
-import type { RequiredIntegration, SqlScript, AiTask } from '../../App';
-import type { IntegrationId } from '../../hooks/useIntegrations';
+import type { RequiredIntegration, SqlScript, AiTask, CustomIntegrationRequest, AiModel } from '../../App';
+import type { IntegrationId, Integrations } from '../../hooks/useIntegrations';
 import GenerationProgressCard from './GenerationProgressCard';
+import CustomIntegrationCard from './CustomIntegrationCard';
 
 type ChatMessage = {
   author: 'user' | 'ai';
@@ -29,11 +30,16 @@ interface ChatPanelProps {
   requiredIntegrations: RequiredIntegration[];
   onConfigureRequest: (integrationId: IntegrationId) => void;
   onSkipIntegration: (integration: RequiredIntegration) => void;
+  customIntegrationRequest: CustomIntegrationRequest | null;
+  onActivateCustomIntegration: (request: CustomIntegrationRequest, credentials: Record<string, string>) => void;
   sqlScript: SqlScript | null;
   onDismissSqlScript: () => void;
   onRestore: (historyId: string) => void;
   attachedFile: File | null;
   onFileChange: (file: File | null) => void;
+  integrations: Integrations;
+  aiModel: AiModel;
+  onBoostUi: () => void;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ 
@@ -47,11 +53,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     requiredIntegrations,
     onConfigureRequest,
     onSkipIntegration,
+    customIntegrationRequest,
+    onActivateCustomIntegration,
     sqlScript,
     onDismissSqlScript,
     onRestore,
     attachedFile,
-    onFileChange
+    onFileChange,
+    integrations,
+    aiModel,
+    onBoostUi
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +74,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, aiTask, requiredIntegrations, sqlScript]);
+  }, [messages, aiTask, requiredIntegrations, sqlScript, customIntegrationRequest]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,10 +105,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
+  const modelName = {
+    gemini: "Gemini",
+    chatgpt: "ChatGPT",
+    claude: "Claude"
+  }[aiModel] || "AI";
+
   return (
     <div className="flex flex-col h-full bg-white text-gray-800 relative">
       <header className="p-4 border-b border-gray-200 flex-shrink-0">
-        <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{modelName} Assistant</h2>
       </header>
       
       <div className="flex-1 p-4 space-y-4 overflow-y-auto pb-40">
@@ -108,7 +125,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           >
             <div className={`p-3 rounded-2xl max-w-sm ${
               msg.author === 'user' 
-                ? 'bg-gray-800 text-white' 
+                ? 'bg-white text-gray-800 border border-gray-200 shadow-sm hover:bg-gray-50 transition-all' 
                 : 'bg-gray-100 text-gray-800'
             }`}>
                {msg.author === 'ai' 
@@ -160,8 +177,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             ))}
           </div>
         )}
+        {customIntegrationRequest && (
+            <CustomIntegrationCard 
+                request={customIntegrationRequest}
+                onActivate={(credentials) => onActivateCustomIntegration(customIntegrationRequest, credentials)}
+            />
+        )}
         {sqlScript && (
-            <SqlScriptCard script={sqlScript} onDismiss={onDismissSqlScript} />
+            <SqlScriptCard 
+                script={sqlScript} 
+                onDismiss={onDismissSqlScript}
+                integrations={integrations}
+            />
         )}
         {aiTask?.status === 'thinking' && (
           <div className="flex justify-start">
@@ -214,15 +241,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <form onSubmit={handleSubmit}>
                 <div className="relative flex items-end">
                     <input type="file" ref={fileInputRef} onChange={handleFileSelected} className="hidden" accept="image/*" />
-                    <button 
-                        type="button"
-                        onClick={handleFileButtonClick}
-                        disabled={isLoading}
-                        className="ml-2 mb-2 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Attach file"
-                    >
-                        <span className="material-symbols-outlined text-gray-800 text-xl leading-none">attach_file</span>
-                    </button>
+                    
+                    <div className="flex-shrink-0 flex items-center gap-1 ml-2 mb-2">
+                        <button 
+                            type="button"
+                            onClick={handleFileButtonClick}
+                            disabled={isLoading}
+                            className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Attach file"
+                            title="Attach file"
+                        >
+                            <span className="material-symbols-outlined text-gray-800 text-xl leading-none">attach_file</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onBoostUi}
+                            disabled={isLoading}
+                            className="px-3 h-10 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                            aria-label="Boost UI"
+                            title="Automatically improve the UI"
+                        >
+                            <span className="material-symbols-outlined text-purple-600 text-base leading-none">auto_awesome</span>
+                            <span className="text-sm font-medium text-gray-800">Boost</span>
+                        </button>
+                    </div>
+
                     <textarea
                         rows={1}
                         placeholder="Describe a change..."
@@ -230,7 +273,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         onChange={(e) => onInputChange(e.target.value)}
                         onKeyDown={handleKeyDown}
                         disabled={isLoading}
-                        className="w-full bg-transparent border-none rounded-none py-3 pl-3 pr-12 text-base text-gray-900 placeholder-gray-500 focus:ring-0 resize-none"
+                        className="w-full bg-transparent border-none rounded-none py-3 pl-2 pr-12 text-base text-gray-900 placeholder-gray-500 focus:ring-0 resize-none"
                         style={{ lineHeight: '1.5rem', height: 'auto' }}
                     />
                     <button 

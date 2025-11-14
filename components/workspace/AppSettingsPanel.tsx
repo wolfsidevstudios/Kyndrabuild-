@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { Project, DeployState } from '../../../App';
 import ImageIcon from '../icons/ImageIcon';
@@ -69,16 +68,16 @@ const AppAppearance = ({ project, onUpdateDetails }: { project: Project; onUpdat
     };
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">App Appearance & PWA</h3>
-            {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="bg-gray-100 p-4 rounded-2xl">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 px-2">App Appearance & PWA</h3>
+            {error && <p className="text-sm text-red-600 mb-4 px-2">{error}</p>}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Left Column: Editors */}
                 <div className="space-y-6">
                     {/* Thumbnail */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Project Thumbnail</label>
-                        <div className="aspect-[16/10] bg-gray-100 rounded-lg overflow-hidden relative group">
+                        <label className="block text-sm font-medium text-gray-700 mb-2 px-2">Project Thumbnail</label>
+                        <div className="aspect-[16/10] bg-white rounded-lg overflow-hidden relative group border border-gray-200">
                             <img src={project.previewImage} alt="Project thumbnail" className="w-full h-full object-cover"/>
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <input type="file" accept="image/png, image/jpeg" ref={thumbnailInputRef} onChange={(e) => handleFileUpload(e, 'thumbnail')} className="hidden" />
@@ -90,11 +89,11 @@ const AppAppearance = ({ project, onUpdateDetails }: { project: Project; onUpdat
                     </div>
 
                     {/* App Icon & PWA Toggle */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 px-2">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">App Icon</label>
                             <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                                     {project.pwa?.icons?.['512'] ? (
                                         <img src={project.pwa.icons['512']} alt="App icon" className="w-full h-full object-cover" />
                                     ) : (
@@ -103,7 +102,7 @@ const AppAppearance = ({ project, onUpdateDetails }: { project: Project; onUpdat
                                 </div>
                                 <div className="flex-grow">
                                     <input type="file" accept="image/png" ref={iconInputRef} onChange={(e) => handleFileUpload(e, 'icon')} className="hidden" />
-                                    <button onClick={() => iconInputRef.current?.click()} className="bg-gray-100 text-gray-800 py-1.5 px-4 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+                                    <button onClick={() => iconInputRef.current?.click()} className="bg-white border border-gray-200 text-gray-800 py-1.5 px-4 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
                                         Upload Icon
                                     </button>
                                     <p className="text-xs text-gray-500 mt-1">Recommended: 512x512 PNG</p>
@@ -113,7 +112,7 @@ const AppAppearance = ({ project, onUpdateDetails }: { project: Project; onUpdat
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Make Installable (PWA)</label>
                             <p className="text-xs text-gray-500 mb-3">Allows users to install your app on their device for an integrated, offline-capable experience.</p>
-                            <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+                            <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-200">
                                 <span className="text-sm text-gray-800">Enable PWA Support</span>
                                 <button onClick={() => handleTogglePwa(!project.pwa.enabled)} className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 ${project.pwa.enabled ? 'bg-gray-800' : 'bg-gray-300'}`}>
                                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${project.pwa.enabled ? 'translate-x-5' : 'translate-x-0'}`}/>
@@ -132,12 +131,12 @@ const AppAppearance = ({ project, onUpdateDetails }: { project: Project; onUpdat
     );
 };
 
-interface ProjectDetailsProps {
+interface AppSettingsPanelProps {
     project: Project | null;
     onUpdateDetails: (projectId: string, updates: Partial<Pick<Project, 'name' | 'description' | 'pwa' | 'previewImage'>>) => void;
 }
 
-const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetails }) => {
+const AppSettingsPanel: React.FC<AppSettingsPanelProps> = ({ project, onUpdateDetails }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   
@@ -203,7 +202,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
   
   if (!project) {
     return (
-        <div className="p-6 sm:p-8 h-full flex items-center justify-center">
+        <div className="p-4 h-full flex items-center justify-center">
             <p className="text-gray-500">No project selected.</p>
         </div>
     );
@@ -217,10 +216,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
   }
 
   return (
-    <div className="p-6 sm:p-8 h-full overflow-y-auto bg-gray-50">
+    <div className="p-4 h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-gray-100 p-4 rounded-2xl">
           <div className="group relative">
             {isEditingName ? (
               <input
@@ -229,23 +228,23 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
                 onChange={(e) => setName(e.target.value)}
                 onBlur={handleNameSave}
                 onKeyDown={handleNameKeyDown}
-                className="text-3xl font-bold text-gray-900 w-full outline-none border-b-2 border-gray-800 bg-gray-100 p-1 -m-1 rounded-t-md"
+                className="text-2xl font-bold text-gray-900 w-full outline-none border-b-2 border-gray-800 bg-gray-200/50 p-1 -m-1 rounded-t-md"
               />
             ) : (
               <h1
                 onClick={() => setIsEditingName(true)}
-                className="text-3xl font-bold text-gray-900 cursor-pointer p-1 -m-1 rounded-md hover:bg-gray-100/70"
+                className="text-2xl font-bold text-gray-900 cursor-pointer p-1 -m-1 rounded-md hover:bg-gray-200/70"
               >
                 {project.name}
               </h1>
             )}
             {!isEditingName && (
-              <button onClick={() => setIsEditingName(true)} className="absolute top-1/2 right-0 -translate-y-1/2 p-2 rounded-full text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-800 transition-opacity">
+              <button onClick={() => setIsEditingName(true)} className="absolute top-1/2 right-0 -translate-y-1/2 p-2 rounded-full text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-800 transition-opacity">
                 <span className="material-symbols-outlined text-xl">edit</span>
               </button>
             )}
           </div>
-          <div className="group relative mt-4">
+          <div className="group relative mt-2">
             {isEditingDescription ? (
               <textarea
                 ref={descriptionTextareaRef}
@@ -253,19 +252,19 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={handleDescriptionSave}
                 onKeyDown={handleDescriptionKeyDown}
-                className="text-gray-600 w-full outline-none border-b-2 border-gray-800 bg-gray-100 p-1 -m-1 rounded-t-md resize-none"
+                className="text-gray-600 w-full outline-none border-b-2 border-gray-800 bg-gray-200/50 p-1 -m-1 rounded-t-md resize-none"
                 rows={3}
               />
             ) : (
               <p
                 onClick={() => setIsEditingDescription(true)}
-                className="text-gray-600 cursor-pointer p-1 -m-1 rounded-md hover:bg-gray-100/70"
+                className="text-gray-600 cursor-pointer p-1 -m-1 rounded-md hover:bg-gray-200/70 text-sm"
               >
                 {project.description || <span className="text-gray-400 italic">Click to add a description</span>}
               </p>
             )}
             {!isEditingDescription && (
-              <button onClick={() => setIsEditingDescription(true)} className="absolute top-0 right-0 p-2 rounded-full text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-800 transition-opacity">
+              <button onClick={() => setIsEditingDescription(true)} className="absolute top-0 right-0 p-2 rounded-full text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-800 transition-opacity">
                 <span className="material-symbols-outlined text-xl">edit</span>
               </button>
             )}
@@ -273,9 +272,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Metadata</h3>
-            <dl className="space-y-4">
+          <div className="bg-gray-100 p-4 rounded-2xl">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 px-2">Metadata</h3>
+            <dl className="space-y-3 px-2">
               <div className="flex justify-between items-center">
                 <dt className="text-sm font-medium text-gray-500">Created</dt>
                 <dd className="text-sm text-gray-900">{formatDate(project.createdAt)}</dd>
@@ -286,11 +285,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
               </div>
             </dl>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Status</h3>
+          <div className="bg-gray-100 p-4 rounded-2xl">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 px-2">Status</h3>
             
             {project.kyndraDeploy?.url ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 px-2">
                     <span className="flex h-3 w-3 relative">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
@@ -309,7 +308,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 px-2">
                     <span className="flex h-3 w-3 relative">
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-300"></span>
                     </span>
@@ -326,4 +325,4 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onUpdateDetail
   );
 };
 
-export default ProjectDetails;
+export default AppSettingsPanel;

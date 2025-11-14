@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import FirebaseIcon from '../icons/FirebaseIcon';
 import SupabaseIcon from '../icons/SupabaseIcon';
+import SQLiteIcon from '../icons/SQLiteIcon';
 import type { Integrations, IntegrationId } from '../../hooks/useIntegrations';
 
 interface DatabaseProps {
@@ -48,7 +50,7 @@ const FirestoreConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void
     return (
         <div>
             <ConfigHeader title="Connect to Google Firestore" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="API Key" name="apiKey" value={config.apiKey} onChange={handleChange} />
                 <InputField label="Auth Domain" name="authDomain" value={config.authDomain} placeholder="your-project.firebaseapp.com" onChange={handleChange} />
                 <InputField label="Project ID" name="projectId" value={config.projectId} placeholder="your-gcp-project-id" onChange={handleChange} />
@@ -70,7 +72,7 @@ const SupabaseConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void,
     return (
         <div>
             <ConfigHeader title="Connect to Supabase" onBack={onBack} />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Supabase URL" name="url" value={config.url} placeholder="https://<your-project-ref>.supabase.co" onChange={handleChange} />
                 <InputField label="Supabase Public (Anon) Key" name="anonKey" value={config.anonKey} onChange={handleChange} />
                 <div className="pt-2">
@@ -84,19 +86,19 @@ const SupabaseConfig = ({ onBack, onSave, initialConfig }: { onBack: () => void,
 };
 
 
-const DBProviderCard = ({ title, description, icon, onConnect, isConnected }: { title: string, description: string, icon: React.ReactNode, onConnect: () => void, isConnected: boolean }) => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-start">
+const DBProviderCard = ({ title, description, icon, onConnect, isConnected, isToggle = false }: { title: string, description: string, icon: React.ReactNode, onConnect: () => void, isConnected: boolean, isToggle?: boolean }) => (
+    <div className="bg-gray-100 p-6 rounded-2xl flex flex-col items-start">
       <div className="flex justify-between items-start w-full">
         {icon}
-        {isConnected && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Connected</span>}
+        {isConnected && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">{isToggle ? 'Enabled' : 'Connected'}</span>}
       </div>
       <h3 className="font-semibold text-lg text-gray-800 mt-4 mb-2">{title}</h3>
       <p className="text-gray-600 text-sm mb-4 flex-grow">{description}</p>
       <button
         onClick={onConnect}
-        className="w-full bg-gray-100 text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors mt-auto"
+        className="w-full bg-white text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-white/80 transition-colors mt-auto"
       >
-        {isConnected ? 'Manage' : 'Connect'}
+        {isToggle ? (isConnected ? 'Disable' : 'Enable') : (isConnected ? 'Manage' : 'Connect')}
       </button>
     </div>
 );
@@ -113,6 +115,15 @@ const Database: React.FC<DatabaseProps> = ({ integrations, setIntegration, isCon
         setIntegration(id, config);
         onConfigured(id, name);
         setConfigView('overview');
+    };
+
+    const handleEnableSqlite = () => {
+        const currentlyConnected = isConnected('sqlite_db');
+        setIntegration('sqlite_db', { enabled: !currentlyConnected });
+        // Only trigger 'configured' when enabling
+        if (!currentlyConnected) {
+            onConfigured('sqlite_db', 'SQLite');
+        }
     };
 
     const renderContent = () => {
@@ -133,9 +144,17 @@ const Database: React.FC<DatabaseProps> = ({ integrations, setIntegration, isCon
             default:
                 return (
                     <>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Database</h1>
-                        <p className="text-gray-600 mb-8">Connect your application to a persistent database.</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">Database</h1>
+                        <p className="text-gray-600 mb-6">Connect your application to a persistent database.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <DBProviderCard 
+                                title="SQLite (In-Browser)"
+                                description="A lightweight, file-based SQL database that runs directly in the browser. Perfect for small-scale apps and local data persistence."
+                                icon={<SQLiteIcon className="h-10 w-10" />}
+                                onConnect={handleEnableSqlite}
+                                isConnected={isConnected('sqlite_db')}
+                                isToggle={true}
+                            />
                             <DBProviderCard 
                                 title="Google Firestore"
                                 description="A flexible, scalable NoSQL cloud database to store and sync data for client- and server-side development."
@@ -157,10 +176,8 @@ const Database: React.FC<DatabaseProps> = ({ integrations, setIntegration, isCon
     };
 
   return (
-    <div className="p-6 sm:p-8 h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        {renderContent()}
-      </div>
+    <div>
+      {renderContent()}
     </div>
   );
 };

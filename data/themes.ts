@@ -1,0 +1,23 @@
+
+export const themes = [
+    { name: 'Midnight Dusk', primaryColor: '#4f46e5', secondaryColor: '#7c3aed' },
+    { name: 'Sunset Glow', primaryColor: '#f97316', secondaryColor: '#ec4899' },
+    { name: 'Oceanic Teal', primaryColor: '#06b6d4', secondaryColor: '#14b8a6' },
+    { name: 'Forest Canopy', primaryColor: '#16a34a', secondaryColor: '#84cc16' },
+    { name: 'Crimson & Slate', primaryColor: '#dc2626', secondaryColor: '#475569' },
+    { name: 'Royal Gold', primaryColor: '#7e22ce', secondaryColor: '#facc15' },
+    { name: 'Arctic Sky', primaryColor: '#3b82f6', secondaryColor: '#60a5fa' },
+    { name: 'Desert Sands', primaryColor: '#ca8a04', secondaryColor: '#f59e0b' },
+    { name: 'Lavender Bliss', primaryColor: '#a855f7', secondaryColor: '#d946ef' },
+    { name: 'Sakura Bloom', primaryColor: '#f472b6', secondaryColor: '#fda4af' },
+    { name: 'Cyberpunk Neon', primaryColor: '#db2777', secondaryColor: '#0891b2' },
+    { name: 'Earth & Sky', primaryColor: '#a16207', secondaryColor: '#2563eb' },
+    { name: 'Monochrome Pro', primaryColor: '#171717', secondaryColor: '#525252' },
+    { name: 'Mint & Lime', primaryColor: '#10b981', secondaryColor: '#84cc16' },
+    { name: 'Coral Reef', primaryColor: '#ef4444', secondaryColor: '#f97316' },
+    { name: 'Grape Soda', primaryColor: '#9333ea', secondaryColor: '#c026d3' },
+    { name: 'Goldenrod', primaryColor: '#eab308', secondaryColor: '#f59e0b' },
+    { name: 'Slate & Sky', primaryColor: '#475569', secondaryColor: '#0ea5e9' },
+    { name: 'Emerald & Gold', primaryColor: '#059669', secondaryColor: '#d97706' },
+    { name: 'Rosewater', primaryColor: '#fda4af', secondaryColor: '#fbcfe8' },
+];

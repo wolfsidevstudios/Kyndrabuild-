@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import FirebaseIcon from '../icons/FirebaseIcon';
 import SupabaseIcon from '../icons/SupabaseIcon';
@@ -50,7 +51,7 @@ const FirebaseAuth = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
     return (
         <div>
             <ConfigHeader title="Configure Firebase Authentication" onBack={onBack} description="Enter your project credentials to connect your authentication provider." />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="API Key" name="apiKey" value={config.apiKey} onChange={handleChange} />
                 <InputField label="Auth Domain" name="authDomain" value={config.authDomain} placeholder="your-project.firebaseapp.com" onChange={handleChange} />
                 <InputField label="Project ID" name="projectId" value={config.projectId} placeholder="your-gcp-project-id" onChange={handleChange} />
@@ -72,7 +73,7 @@ const SupabaseAuth = ({ onBack, onSave, initialConfig }: { onBack: () => void, o
     return (
         <div>
             <ConfigHeader title="Configure Supabase Auth" onBack={onBack} description="Enter your project credentials to connect your authentication provider." />
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4">
                 <InputField label="Supabase URL" name="url" value={config.url} placeholder="https://<your-project-ref>.supabase.co" onChange={handleChange} />
                 <InputField label="Supabase Public (Anon) Key" name="anonKey" value={config.anonKey} onChange={handleChange} />
                 <div className="pt-2">
@@ -113,7 +114,7 @@ const KindraConfig = ({ onBack, onSave, initialConfig, isConnected, deployUrl }:
             <ConfigHeader title="Configure K-Indra Auth" onBack={onBack} description="Activate social logins for your deployed application." />
             <div className="space-y-6">
                 {/* Google Config */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="bg-gray-100 p-6 rounded-2xl">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                             <GoogleIcon />
@@ -122,7 +123,7 @@ const KindraConfig = ({ onBack, onSave, initialConfig, isConnected, deployUrl }:
                         {isConnected('kindra_google_auth') && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>}
                     </div>
                     <p className="text-sm text-gray-500 mt-2 mb-4">Add your Google Client ID to enable sign-in. You'll need to add the following URL to your authorized redirect URIs in the Google Cloud Console.</p>
-                    <div className="bg-gray-100 p-2 rounded-lg text-sm font-mono text-gray-700 flex items-center justify-between mb-4">
+                    <div className="bg-white p-2 rounded-lg text-sm font-mono text-gray-700 flex items-center justify-between mb-4">
                         <span className="truncate">{googleCallbackUrl}</span>
                         <button onClick={() => handleCopy(googleCallbackUrl, 'google')} className="p-1 rounded-md hover:bg-gray-200">
                            <span className="material-symbols-outlined text-base">{googleCopied ? 'done' : 'content_copy'}</span>
@@ -139,7 +140,7 @@ const KindraConfig = ({ onBack, onSave, initialConfig, isConnected, deployUrl }:
                 </div>
 
                 {/* GitHub Config */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="bg-gray-100 p-6 rounded-2xl">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                             <GithubIcon />
@@ -148,7 +149,7 @@ const KindraConfig = ({ onBack, onSave, initialConfig, isConnected, deployUrl }:
                          {isConnected('kindra_github_auth') && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>}
                     </div>
                     <p className="text-sm text-gray-500 mt-2 mb-4">Add your GitHub Client ID and Secret. You'll need to add the following URL as the 'Authorization callback URL' in your GitHub OAuth App settings.</p>
-                     <div className="bg-gray-100 p-2 rounded-lg text-sm font-mono text-gray-700 flex items-center justify-between mb-4">
+                     <div className="bg-white p-2 rounded-lg text-sm font-mono text-gray-700 flex items-center justify-between mb-4">
                         <span className="truncate">{githubCallbackUrl}</span>
                         <button onClick={() => handleCopy(githubCallbackUrl, 'github')} className="p-1 rounded-md hover:bg-gray-200">
                            <span className="material-symbols-outlined text-base">{githubCopied ? 'done' : 'content_copy'}</span>
@@ -171,7 +172,7 @@ const KindraConfig = ({ onBack, onSave, initialConfig, isConnected, deployUrl }:
 
 
 const AuthProviderCard = ({ title, description, icon, onConfigure, isConnected, disabled = false, disabledText = "" }: { title: string, description: string, icon: React.ReactNode, onConfigure: () => void, isConnected: boolean, disabled?: boolean, disabledText?: string }) => (
-  <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-start ${disabled ? 'opacity-50' : ''}`}>
+  <div className={`bg-gray-100 p-6 rounded-2xl flex flex-col items-start ${disabled ? 'opacity-50' : ''}`}>
     <div className="flex justify-between items-start w-full">
         {icon}
         {isConnected && !disabled && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Connected</span>}
@@ -179,13 +180,13 @@ const AuthProviderCard = ({ title, description, icon, onConfigure, isConnected, 
     <h3 className="font-semibold text-lg text-gray-800 mt-4 mb-2">{title}</h3>
     <p className="text-gray-600 text-sm mb-4 flex-grow">{description}</p>
     {disabled ? (
-        <div className="w-full bg-gray-100 text-gray-500 py-2 rounded-lg text-sm font-semibold text-center mt-auto">
+        <div className="w-full bg-gray-200 text-gray-500 py-2 rounded-lg text-sm font-semibold text-center mt-auto">
             {disabledText}
         </div>
     ) : (
         <button
             onClick={onConfigure}
-            className="w-full bg-gray-100 text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors mt-auto"
+            className="w-full bg-white text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-white/80 transition-colors mt-auto"
         >
             {isConnected ? 'Manage' : 'Configure'}
         </button>
@@ -236,9 +237,9 @@ const Authentication: React.FC<AuthProps> = ({ integrations, setIntegration, isC
       default:
         return (
           <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Authentication</h1>
-            <p className="text-gray-600 mb-8">Add user sign-up and login to your application.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Authentication</h1>
+            <p className="text-gray-600 mb-6">Add user sign-up and login to your application.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <AuthProviderCard 
                 title="K-Indra Auth"
                 description="Our own managed authentication service for your deployed app. Activate social logins like Google and GitHub with ease."
@@ -269,10 +270,8 @@ const Authentication: React.FC<AuthProps> = ({ integrations, setIntegration, isC
   };
 
   return (
-    <div className="p-6 sm:p-8 h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
+    <div>
         {renderContent()}
-      </div>
     </div>
   );
 };

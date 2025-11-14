@@ -1,15 +1,18 @@
 
+
+
 import React from 'react';
-import type { Project } from '../../App';
+import type { Project, ProjectType } from '../../App';
 
 interface ProjectsListPageProps {
   projects: Project[];
   onSelectProject: (id: string) => void;
-  onCreateNewProject: () => void;
+  onCreateNewProject: (type: ProjectType) => void;
   onDeleteProject: (id: string) => void;
+  onGoHome: () => void;
 }
 
-const ProjectsListPage: React.FC<ProjectsListPageProps> = ({ projects, onSelectProject, onCreateNewProject, onDeleteProject }) => {
+const ProjectsListPage: React.FC<ProjectsListPageProps> = ({ projects, onSelectProject, onCreateNewProject, onDeleteProject, onGoHome }) => {
     const sortedProjects = [...projects].sort((a, b) => b.lastModified - a.lastModified);
     
     const handleDelete = (e: React.MouseEvent, projectId: string) => {
@@ -20,21 +23,13 @@ const ProjectsListPage: React.FC<ProjectsListPageProps> = ({ projects, onSelectP
     };
     
   return (
-    <div className="w-full h-screen bg-gray-50 p-6 sm:p-8">
+    <div className="w-full h-full bg-white p-4 sm:p-6 overflow-y-auto">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">My Projects</h1>
-          <p className="text-gray-600 mt-2">Select a project to continue or start a new one.</p>
+            <h1 className="text-4xl font-bold text-gray-900">My Apps</h1>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <button
-            onClick={onCreateNewProject}
-            className="group aspect-[16/10] bg-white rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-800 hover:bg-gray-100/50 transition-all flex flex-col items-center justify-center text-gray-500 hover:text-gray-800"
-          >
-            <span className="material-symbols-outlined text-4xl mb-2 transition-transform group-hover:scale-110">add_circle</span>
-            <span className="font-semibold">Create New Project</span>
-          </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           
           {sortedProjects.map(project => (
             <div
@@ -47,11 +42,18 @@ const ProjectsListPage: React.FC<ProjectsListPageProps> = ({ projects, onSelectP
                 alt={`${project.name} preview`}
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 flex flex-col justify-end">
-                <h3 className="font-bold text-white text-lg">{project.name}</h3>
-                <p className="text-xs text-gray-200">
-                  Last updated: {new Date(project.lastModified).toLocaleString()}
-                </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 flex flex-col justify-end">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h3 className="font-bold text-white text-base truncate">{project.name}</h3>
+                         <p className="text-xs text-gray-200">
+                           {new Date(project.lastModified).toLocaleDateString()}
+                        </p>
+                    </div>
+                    {project.projectType === 'mobile' && (
+                        <span className="material-symbols-outlined text-white text-lg flex-shrink-0" title="Mobile Project">smartphone</span>
+                    )}
+                </div>
               </div>
                <button 
                 onClick={(e) => handleDelete(e, project.id)}

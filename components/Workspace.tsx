@@ -1,143 +1,147 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+// FIX: Imported ChatMessage and HistoryEntry from App.tsx where they are defined, instead of types.ts.
 import type { FileNode } from '../types';
+import type { ChatMessage, HistoryEntry, DeployState, KyndraDeployState, Project } from '../../App';
 import type { Integrations, IntegrationId } from '../hooks/useIntegrations';
-import type { HistoryEntry, DeployState, Project } from '../../App';
-import BackendViewer from './BackendViewer';
-import Database from './workspace/Database';
-import ProjectDetails from './workspace/ProjectDetails';
-import Authentication from './workspace/Authentication';
-import Payments from './workspace/Payments';
-import HistoryViewer from './workspace/HistoryViewer';
-import HistoryIcon from './icons/HistoryIcon';
+import type { UiInstructions, AiModel, ChatGptVersion } from '../../App';
+import type { ConsoleLogEntry } from './LivePreview';
+import FileTree from './FileTree';
+import CodeViewer from './CodeViewer';
+import EnvironmentVariables from './workspace/EnvironmentVariables';
 import Deployment from './workspace/Deployment';
-
+import ConsoleLogsPanel from './workspace/ConsoleLogsPanel';
+import DataPanel from './workspace/Data';
+import ImageGeneratorPanel from './workspace/ImageGeneratorPanel';
+import AppSettingsPanel from './workspace/AppSettingsPanel';
+import type { Tool } from './PillToggle';
+import Model from './workspace/Model';
+import Payments from './workspace/Payments';
+import ApisPanel from './workspace/ApisPanel';
 
 interface WorkspaceProps {
+  activeTool: Tool | null;
   files: Map<string, FileNode>;
+  chatHistory: ChatMessage[];
+  history: HistoryEntry[];
   integrations: Integrations;
   setIntegration: (key: IntegrationId, value: any) => void;
   isConnected: (key: IntegrationId) => boolean;
-  onIntegrationConfigured: (id: IntegrationId, name: string) => void;
-  activeConfig: { view: string, configId: string } | null;
-  history: HistoryEntry[];
-  onRestore: (historyId: string) => void;
+  onConfigured: (id: IntegrationId, name: string) => void;
+  uiInstructions: UiInstructions;
+  onUpdateUiInstructions: (updates: Partial<UiInstructions>) => void;
+  aiModel: AiModel;
+  onUpdateAiModel: (model: AiModel) => void;
+  chatgptVersion: ChatGptVersion;
+  onUpdateChatGptVersion: (version: ChatGptVersion) => void;
   appName: string;
   setAppName: (name: string) => void;
   deployState: DeployState;
   onDeploy: () => void;
+  kyndraDeployState: KyndraDeployState;
+  onKyndraDeploy: () => void;
+  environmentVariables: Record<string, string>;
+  onUpdateEnvironmentVariables: (vars: Record<string, string>) => void;
+  consoleLogs: ConsoleLogEntry[];
+  onAddToPrompt: (prompt: string) => void;
   project: Project | null;
-  onUpdateProjectDetails: (projectId: string, updates: { name?: string; description?: string }) => void;
+  onUpdateProjectDetails: (projectId: string, updates: Partial<Pick<Project, 'name' | 'description' | 'pwa' | 'previewImage'>>) => void;
+  onAttachGeneratedImage: (name: string, url: string) => void;
 }
 
-type WorkspaceView = 'project' | 'backend' | 'database' | 'auth' | 'payments' | 'history' | 'deployment';
+const CodePanel = ({ files }: { files: Map<string, FileNode> }) => {
+    const [selectedFilePath, setSelectedFilePath] = React.useState<string | null>('src/App.tsx');
+    const projectFiles = React.useMemo(() => {
+        // This is a simplified reconstruction. For a real app, this should come from a single source of truth.
+        const root: FileNode = { name: 'src', type: 'directory', path: 'src', children: [] };
+        const pathMap = new Map<string, FileNode>();
+        pathMap.set('src', root);
 
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
+        Array.from(files.values()).forEach(file => {
+            const parts = file.path.split('/');
+            let currentPath = '';
+            let parentNode: FileNode | undefined = undefined;
+
+            for(let i=0; i < parts.length -1; i++) {
+                currentPath += (i > 0 ? '/' : '') + parts[i];
+                parentNode = pathMap.get(currentPath);
+            }
+            if (parentNode && parentNode.type === 'directory' && parentNode.children) {
+                 if (!parentNode.children.find(c => c.path === file.path)) {
+                    parentNode.children.push(file);
+                 }
+            } else if (file.path.startsWith('src/')) {
+                 root.children?.push(file);
+            }
+        });
+        
+        const sortChildren = (node: FileNode) => {
+            if (node.children) {
+                node.children.sort((a, b) => {
+                    if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+                    return a.name.localeCompare(b.name);
+                });
+                node.children.forEach(sortChildren);
+            }
+        };
+        sortChildren(root);
+        return root;
+
+    }, [files]);
+    
+    const selectedFile = selectedFilePath ? files.get(selectedFilePath) : null;
+
+    return (
+        <div className="h-full flex flex-col">
+            <div className="h-1/3 border-b border-gray-200 overflow-y-auto">
+                 <FileTree node={projectFiles} selectedFilePath={selectedFilePath} onSelectFile={setSelectedFilePath} />
+            </div>
+            <div className="h-2/3">
+                 <CodeViewer file={selectedFile ?? null} history={[]} onRevert={() => {}}/>
+            </div>
+        </div>
+    )
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-      isActive ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-100/70'
-    }`}
-  >
-    {icon}
-    <span>{label}</span>
-  </button>
-);
+const Workspace: React.FC<WorkspaceProps> = (props) => {
+    const { activeTool, files, chatHistory, environmentVariables, onUpdateEnvironmentVariables, consoleLogs } = props;
 
-const Workspace: React.FC<WorkspaceProps> = ({ 
-  files, 
-  integrations, 
-  setIntegration, 
-  isConnected, 
-  onIntegrationConfigured,
-  activeConfig,
-  history,
-  onRestore,
-  appName,
-  setAppName,
-  deployState,
-  onDeploy,
-  project,
-  onUpdateProjectDetails
-}) => {
-  const [view, setView] = useState<WorkspaceView>('project');
-
-  useEffect(() => {
-    if (activeConfig) {
-      setView(activeConfig.view as WorkspaceView);
+    switch(activeTool) {
+        case 'code':
+            return <CodePanel files={files} />;
+        case 'apis':
+            return <ApisPanel {...props} />;
+        case 'data':
+            return <DataPanel {...props} activeConfigId={null} />;
+        case 'image':
+            return <ImageGeneratorPanel onAttach={props.onAttachGeneratedImage} />;
+        case 'settings':
+            return <AppSettingsPanel 
+                        project={props.project}
+                        onUpdateDetails={props.onUpdateProjectDetails}
+                    />;
+        case 'model':
+            return <Model 
+                currentModel={props.aiModel}
+                onUpdateModel={props.onUpdateAiModel}
+                chatgptVersion={props.chatgptVersion}
+                onUpdateChatGptVersion={props.onUpdateChatGptVersion}
+                {...props}
+            />;
+        case 'env':
+            return <EnvironmentVariables
+                variables={environmentVariables}
+                onUpdate={onUpdateEnvironmentVariables}
+            />;
+        case 'payments':
+            return <div className="p-4"><Payments {...props} activeConfigId={null}/></div>;
+        case 'deploy':
+            return <Deployment {...props} activeConfigId={null} />;
+        case 'logs':
+            return <ConsoleLogsPanel logs={consoleLogs} />;
+        default:
+            return <div className="p-4 text-gray-500">Select a tool to begin.</div>;
     }
-  }, [activeConfig]);
-
-  const renderIcon = (iconName: string) => <span className="material-symbols-outlined text-lg">{iconName}</span>;
-
-  return (
-    <div className="flex h-full bg-gray-50">
-      <aside className="w-60 bg-white border-r border-gray-200 p-4 flex flex-col gap-2">
-        <NavItem icon={renderIcon("info")} label="Project Details" isActive={view === 'project'} onClick={() => setView('project')} />
-        <NavItem icon={renderIcon("data_object")} label="Backend" isActive={view === 'backend'} onClick={() => setView('backend')} />
-        <NavItem icon={renderIcon("database")} label="Database" isActive={view === 'database'} onClick={() => setView('database')} />
-        <NavItem icon={renderIcon("security")} label="Authentication" isActive={view === 'auth'} onClick={() => setView('auth')} />
-        <NavItem icon={renderIcon("credit_card")} label="Payments" isActive={view === 'payments'} onClick={() => setView('payments')} />
-        <NavItem icon={renderIcon("cloud_upload")} label="Deployment" isActive={view === 'deployment'} onClick={() => setView('deployment')} />
-        <NavItem icon={<HistoryIcon className="h-5 w-5" />} label="History" isActive={view === 'history'} onClick={() => setView('history')} />
-      </aside>
-      <main className="flex-1 overflow-y-auto">
-        {view === 'project' && <ProjectDetails project={project} deployState={deployState} onUpdateDetails={onUpdateProjectDetails} />}
-        {view === 'backend' && <BackendViewer files={files} />}
-        {view === 'database' && (
-          <Database 
-            integrations={integrations} 
-            setIntegration={setIntegration}
-            isConnected={isConnected}
-            onConfigured={onIntegrationConfigured}
-            activeConfigId={activeConfig?.view === 'database' ? activeConfig.configId : null}
-          />
-        )}
-        {view === 'auth' && (
-          <Authentication 
-            integrations={integrations}
-            setIntegration={setIntegration}
-            isConnected={isConnected}
-            onConfigured={onIntegrationConfigured}
-            activeConfigId={activeConfig?.view === 'auth' ? activeConfig.configId : null}
-            deployState={deployState}
-          />
-        )}
-        {view === 'payments' && (
-           <Payments 
-            integrations={integrations}
-            setIntegration={setIntegration}
-            isConnected={isConnected}
-            onConfigured={onIntegrationConfigured}
-            activeConfigId={activeConfig?.view === 'payments' ? activeConfig.configId : null}
-          />
-        )}
-        {view === 'deployment' && (
-            <Deployment
-                integrations={integrations}
-                setIntegration={setIntegration}
-                isConnected={isConnected}
-                onConfigured={onIntegrationConfigured}
-                activeConfigId={activeConfig?.view === 'deployment' ? activeConfig.configId : null}
-                appName={appName}
-                setAppName={setAppName}
-                deployState={deployState}
-                onDeploy={onDeploy}
-            />
-        )}
-        {view === 'history' && (
-           <HistoryViewer history={history} onRestore={onRestore} />
-        )}
-      </main>
-    </div>
-  );
 };
 
 export default Workspace;
