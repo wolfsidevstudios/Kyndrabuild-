@@ -94,20 +94,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentModel, onUpdateModel
                         onSelect={() => onUpdateModel('puter_claude_sonnet_4_5')}
                         isCurrent={currentModel === 'puter_claude_sonnet_4_5'}
                     />
-                    <ModelProviderCard 
-                        title="Claude 4.5 Haiku"
-                        description="The fastest and most compact model in the Claude 4.5 family, for near-instant responsiveness."
-                        icon={<ClaudeIcon />}
-                        onSelect={() => onUpdateModel('puter_claude_haiku_4_5')}
-                        isCurrent={currentModel === 'puter_claude_haiku_4_5'}
-                    />
-                     <ModelProviderCard 
-                        title="Claude 4.1 Opus"
-                        description="A powerful previous-generation model with a large context window, excelling at complex tasks."
-                        icon={<ClaudeIcon />}
-                        onSelect={() => onUpdateModel('puter_claude_opus_4_1')}
-                        isCurrent={currentModel === 'puter_claude_opus_4_1'}
-                    />
                 </div>
             </div>
         </div>

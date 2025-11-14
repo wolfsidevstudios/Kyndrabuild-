@@ -77,7 +77,7 @@ export type AiModel =
   // Puter OpenAI Models
   | 'puter_gpt_4o' | 'puter_gpt_4o_mini' | 'puter_gpt_5_nano' | 'puter_gpt_5_mini'
   // Puter Claude Models
-  | 'puter_claude_sonnet_4_5' | 'puter_claude_haiku_4_5' | 'puter_claude_opus_4_1';
+  | 'puter_claude_sonnet_4_5';
 
 export type ChatGptVersion = 'gpt-4o' | 'gpt-3.5-turbo';
 
