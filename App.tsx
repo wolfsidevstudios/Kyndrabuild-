@@ -75,7 +75,7 @@ export type UiInstructions = {
 export type AiModel = 
   | 'gemini'
   // Puter OpenAI Models
-  | 'puter_gpt_4o' | 'puter_gpt_4o_mini' | 'puter_gpt_5_nano' | 'puter_gpt_5_mini'
+  | 'puter_gpt_5_nano'
   // Puter Claude Models
   | 'puter_claude_sonnet_4_5';
 

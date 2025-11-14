@@ -54,32 +54,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentModel, onUpdateModel
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Puter.js Models (OpenAI)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                      <ModelProviderCard 
-                        title="GPT-4o"
-                        description="OpenAI's newest, most advanced model, with excellent vision and performance."
-                        icon={<ChatgptIcon />}
-                        onSelect={() => onUpdateModel('puter_gpt_4o')}
-                        isCurrent={currentModel === 'puter_gpt_4o'}
-                    />
-                    <ModelProviderCard 
-                        title="GPT-5 Mini"
-                        description="A powerful and balanced model for a wide range of tasks."
-                        icon={<ChatgptIcon />}
-                        onSelect={() => onUpdateModel('puter_gpt_5_mini')}
-                        isCurrent={currentModel === 'puter_gpt_5_mini'}
-                    />
-                     <ModelProviderCard 
                         title="GPT-5 Nano"
                         description="A fast and efficient model, optimized for speed and quick responses."
                         icon={<ChatgptIcon />}
                         onSelect={() => onUpdateModel('puter_gpt_5_nano')}
                         isCurrent={currentModel === 'puter_gpt_5_nano'}
-                    />
-                     <ModelProviderCard 
-                        title="GPT-4o Mini"
-                        description="A smaller, faster version of the flagship GPT-4o model."
-                        icon={<ChatgptIcon />}
-                        onSelect={() => onUpdateModel('puter_gpt_4o_mini')}
-                        isCurrent={currentModel === 'puter_gpt_4o_mini'}
                     />
                 </div>
             </div>
