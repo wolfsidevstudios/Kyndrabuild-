@@ -762,7 +762,12 @@ For your explanation, use markdown formatting.
 
     } catch (error) {
       console.error("Error calling AI API:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      let errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+
+      if (errorMessage.includes("data policy") && errorMessage.includes("openrouter.ai/settings/privacy")) {
+        errorMessage = `I encountered an issue with your OpenRouter settings. The error message was:\n\n**"No endpoints found matching your data policy (Free model publication)."**\n\nThis usually means you need to enable free models in your OpenRouter account settings. Please visit [https://openrouter.ai/settings/privacy](https://openrouter.ai/settings/privacy) and adjust your data policy to allow usage of free models.`;
+      }
+      
       setChatHistory(prev => [...prev, { author: 'ai', content: `Sorry, I encountered an error: ${errorMessage}` }]);
     } finally {
       setAiTask(null);

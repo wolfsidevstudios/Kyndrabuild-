@@ -7,8 +7,8 @@ interface MarkdownRendererProps {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   const renderInlineFormatting = (text: string) => {
     // Split text by markdown markers, process them, and re-join.
-    // This handles multiple formats on the same line.
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+    // Handles multiple formats on the same line.
+    const parts = text.split(/(\[.*?\]\(.*?\)|`.*?`|\*\*.*?\*\*)/g);
 
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -16,6 +16,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       }
       if (part.startsWith('`') && part.endsWith('`')) {
         return <code key={i} className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-xs font-mono">{part.substring(1, part.length - 1)}</code>;
+      }
+      if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
+          const textMatch = part.match(/\[(.*?)\]/);
+          const urlMatch = part.match(/\((.*?)\)/);
+          if (textMatch && urlMatch) {
+              return <a key={i} href={urlMatch[1]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{textMatch[1]}</a>;
+          }
       }
       return part; // Just text
     });
