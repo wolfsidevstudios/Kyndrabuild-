@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { mockProject } from './data/mockProject';
 import { mockMobileProject } from './data/mockMobileProject';
@@ -13,8 +12,9 @@ import SuggestionsCarousel from './components/SuggestionsCarousel';
 import BuildingPage from './components/BuildingPage';
 import { useIntegrations, validIntegrationIds } from './hooks/useIntegrations';
 import type { Integrations, IntegrationId } from './hooks/useIntegrations';
+import SettingsPage from './components/SettingsPage';
 
-type View = 'build' | 'planning' | 'building' | 'editor' | 'projects';
+type View = 'build' | 'planning' | 'building' | 'editor' | 'projects' | 'settings';
 
 export type AttachmentContext = {
     id: IntegrationId;
@@ -120,6 +120,8 @@ export type Project = {
 };
 
 const PROJECTS_STORAGE_KEY = 'ai-builder-projects';
+const SETTINGS_STORAGE_KEY = 'ai-builder-settings';
+
 const defaultPreview = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmMTRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2QxZDVlYiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gUHJldmlldzwvdGV4dD48L3N2Zz4=';
 
 const defaultUiInstructions: UiInstructions = {
@@ -218,7 +220,7 @@ const BottomNavBar = ({ activeView, onNavigate }: { activeView: View; onNavigate
     const activeClass = "text-blue-600";
     
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-t border-gray-200/80 flex items-center justify-around z-40">
+        <div className="fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-t border-gray-200/80 flex items-center justify-around z-40 lg:hidden">
             <button className={`${buttonClass} ${activeView === 'projects' ? activeClass : ''}`} onClick={() => onNavigate('projects')}>
                 <span className="material-symbols-outlined">grid_view</span>
                 <span className="text-xs font-medium">My Apps</span>
@@ -230,19 +232,44 @@ const BottomNavBar = ({ activeView, onNavigate }: { activeView: View; onNavigate
             >
                 <span className="material-symbols-outlined text-white text-3xl">add</span>
             </button>
-            <button className={`${buttonClass} opacity-50 cursor-not-allowed`} onClick={() => alert('Coming soon!')}>
-                <span className="material-symbols-outlined">store</span>
-                <span className="text-xs font-medium">Store</span>
+            <button className={`${buttonClass} ${activeView === 'settings' ? activeClass : ''}`} onClick={() => onNavigate('settings')}>
+                <span className="material-symbols-outlined">settings</span>
+                <span className="text-xs font-medium">Settings</span>
             </button>
         </div>
     );
 };
+
+const SideNavBar = ({ activeView, onNavigate }: { activeView: View; onNavigate: (view: View) => void; }) => {
+    const buttonClass = "flex flex-col items-center justify-center gap-1.5 text-gray-500 transition-colors w-full py-3 rounded-lg";
+    const activeClass = "bg-gray-100 text-gray-800 font-semibold";
+    
+    return (
+        <div className="h-full bg-white flex-shrink-0 w-24 flex flex-col items-center p-4 gap-4">
+             <button className={`${buttonClass} ${activeView === 'projects' ? activeClass : ''}`} onClick={() => onNavigate('projects')}>
+                <span className="material-symbols-outlined">grid_view</span>
+                <span className="text-xs font-medium">My Apps</span>
+            </button>
+             <button className={`${buttonClass} ${activeView === 'build' ? activeClass : ''}`} onClick={() => onNavigate('build')}>
+                <span className="material-symbols-outlined">add_circle</span>
+                <span className="text-xs font-medium">Build</span>
+            </button>
+             <button className={`${buttonClass} ${activeView === 'settings' ? activeClass : ''}`} onClick={() => onNavigate('settings')}>
+                <span className="material-symbols-outlined">settings</span>
+                <span className="text-xs font-medium">Settings</span>
+            </button>
+        </div>
+    );
+}
 
 
 function App() {
   const [view, setView] = useState<View>('build');
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+
+  // Global Settings
+  const [defaultAiModel, setDefaultAiModel] = useState<AiModel>('gemini');
 
   // State for the active project
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -283,7 +310,7 @@ function App() {
     }, 3000);
   };
   
-  // Load projects from localStorage on initial render
+  // Load projects and settings from localStorage on initial render
   useEffect(() => {
     try {
       const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
@@ -306,7 +333,7 @@ function App() {
             return {
                 ...p,
                 createdAt: p.createdAt || p.lastModified, // Fallback for createdAt
-                description: p.description || `An interactive code previewer for multi-file React and TypeScript projects.`, // Fallback for description
+                description: p.description || `An AI-generated project.`, // Fallback for description
                 pwa: newPwa,
                 aiModel: p.aiModel || 'gemini',
                 chatgptVersion: p.chatgptVersion || 'gpt-4o',
@@ -319,8 +346,17 @@ function App() {
         });
         setProjects(migratedProjects as Project[]);
       }
+      
+      const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (storedSettings) {
+        const { defaultAiModel: savedModel } = JSON.parse(storedSettings);
+        if (savedModel) {
+            setDefaultAiModel(savedModel);
+        }
+      }
+
     } catch (error) {
-      console.error('Failed to load projects from localStorage:', error);
+      console.error('Failed to load data from localStorage:', error);
     }
   }, []);
 
@@ -331,6 +367,15 @@ function App() {
       setShowBoostPopup(true);
     }
   }, []);
+  
+  // Save settings to local storage
+  useEffect(() => {
+    try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ defaultAiModel }));
+    } catch (error) {
+        console.error('Failed to save settings:', error);
+    }
+  }, [defaultAiModel]);
 
   const handleCloseBoostPopup = () => {
     setShowBoostPopup(false);
@@ -843,7 +888,7 @@ Respond in JSON format with two keys: "name" and "description".`;
               chatHistory: chat,
               previewImage: defaultPreview,
               pwa: { enabled: false, icons: null },
-              aiModel: 'gemini',
+              aiModel: defaultAiModel,
               chatgptVersion: 'gpt-4o',
               uiInstructions: theme || defaultUiInstructions,
               kyndraDeploy: { url: null },
@@ -857,7 +902,7 @@ Respond in JSON format with two keys: "name" and "description".`;
           setHistory(newProject.history);
           setChatHistory(newProject.chatHistory);
           setUiInstructions(newProject.uiInstructions);
-          setAiModel('gemini');
+          setAiModel(defaultAiModel);
           setChatgptVersion('gpt-4o');
           setProjectType(type);
           setEnvironmentVariables({});
@@ -869,7 +914,7 @@ Respond in JSON format with two keys: "name" and "description".`;
           
           setView('building');
       }
-  }, [geminiAi]);
+  }, [geminiAi, defaultAiModel]);
 
   const handleCreateNewProject = (options: { prompt: string; theme?: UiInstructions, type: ProjectType }) => {
     const { prompt: initialPrompt, theme: initialTheme, type } = options;
@@ -887,7 +932,7 @@ Respond in JSON format with two keys: "name" and "description".`;
         setHistory(project.history);
         setChatHistory(project.chatHistory);
         setUiInstructions(project.uiInstructions || defaultUiInstructions);
-        setAiModel(project.aiModel || 'gemini');
+        setAiModel(project.aiModel || defaultAiModel);
         setChatgptVersion(project.chatgptVersion || 'gpt-4o');
         setProjectType(project.projectType || 'web');
         setEnvironmentVariables(project.environmentVariables || {});
@@ -948,6 +993,11 @@ Respond in JSON format with two keys: "name" and "description".`;
                         onDeleteProject={handleDeleteProject}
                         onGoHome={() => setView('build')}
                     />;
+        case 'settings':
+            return <SettingsPage
+                        currentModel={defaultAiModel}
+                        onUpdateModel={setDefaultAiModel}
+                    />;
         case 'editor':
              if (!projectFiles) {
                 return (
@@ -995,16 +1045,21 @@ Respond in JSON format with two keys: "name" and "description".`;
     }
   }
 
+  const isMainView = !['planning', 'building', 'editor'].includes(view);
+
   return (
-    <div className="w-full h-screen bg-white font-sans overflow-hidden">
+    <div className="w-full h-screen bg-white font-sans overflow-hidden lg:flex">
         <SaveConfirmationPopup isVisible={saveConfirmation.visible} message={saveConfirmation.message} />
         {showBoostPopup && <BoostFeaturePopup onClose={handleCloseBoostPopup} />}
         
-        <main className={`h-full ${!['planning', 'building', 'editor'].includes(view) ? 'pb-20' : ''}`}>
-            {renderCurrentView()}
+        <main className={`h-full flex-grow ${isMainView ? 'pb-20 lg:pb-0' : ''} lg:p-6 lg:pr-0`}>
+             <div className={`h-full w-full ${isMainView ? 'lg:rounded-2xl lg:shadow-2xl lg:border lg:border-gray-200/80 lg:overflow-hidden' : ''}`}>
+                {renderCurrentView()}
+             </div>
         </main>
         
-        {!['planning', 'building', 'editor'].includes(view) && <BottomNavBar activeView={view} onNavigate={handleNavigate} />}
+        {isMainView && <BottomNavBar activeView={view} onNavigate={handleNavigate} />}
+        {isMainView && <div className="hidden lg:block w-28 flex-shrink-0 p-3"><SideNavBar activeView={view} onNavigate={handleNavigate} /></div>}
     </div>
   );
 }
