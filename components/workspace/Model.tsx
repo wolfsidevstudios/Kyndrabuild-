@@ -1,8 +1,11 @@
+
+
 import React, { useState } from 'react';
 import type { AiModel } from '../../../App';
 import GeminiIcon from '../icons/GeminiIcon';
 import ChatgptIcon from '../icons/ChatgptIcon';
 import ClaudeIcon from '../icons/ClaudeIcon';
+import DeepseekIcon from '../icons/DeepseekIcon';
 
 interface ModelProps {
   currentModel: AiModel;
@@ -48,11 +51,32 @@ const Model: React.FC<ModelProps> = ({ currentModel, onUpdateModel }) => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Puter.js Models (OpenAI)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <ModelProviderCard 
+                    title="GPT-4o"
+                    description="OpenAI's newest, most advanced model, with excellent vision and performance."
+                    icon={<ChatgptIcon />}
+                    onSelect={() => onUpdateModel('puter_gpt_4o')}
+                    isCurrent={currentModel === 'puter_gpt_4o'}
+                />
+                <ModelProviderCard 
+                    title="GPT-5 Mini"
+                    description="A powerful and balanced model for a wide range of tasks."
+                    icon={<ChatgptIcon />}
+                    onSelect={() => onUpdateModel('puter_gpt_5_mini')}
+                    isCurrent={currentModel === 'puter_gpt_5_mini'}
+                />
+                 <ModelProviderCard 
                     title="GPT-5 Nano"
                     description="A fast and efficient model, optimized for speed and quick responses."
                     icon={<ChatgptIcon />}
                     onSelect={() => onUpdateModel('puter_gpt_5_nano')}
                     isCurrent={currentModel === 'puter_gpt_5_nano'}
+                />
+                 <ModelProviderCard 
+                    title="GPT-4o Mini"
+                    description="A smaller, faster version of the flagship GPT-4o model."
+                    icon={<ChatgptIcon />}
+                    onSelect={() => onUpdateModel('puter_gpt_4o_mini')}
+                    isCurrent={currentModel === 'puter_gpt_4o_mini'}
                 />
             </div>
         </div>
@@ -67,7 +91,37 @@ const Model: React.FC<ModelProps> = ({ currentModel, onUpdateModel }) => {
                     onSelect={() => onUpdateModel('puter_claude_sonnet_4_5')}
                     isCurrent={currentModel === 'puter_claude_sonnet_4_5'}
                 />
+                <ModelProviderCard 
+                    title="Claude 4.5 Haiku"
+                    description="The fastest and most compact model in the Claude 4.5 family, for near-instant responsiveness."
+                    icon={<ClaudeIcon />}
+                    onSelect={() => onUpdateModel('puter_claude_haiku_4_5')}
+                    isCurrent={currentModel === 'puter_claude_haiku_4_5'}
+                />
+                 <ModelProviderCard 
+                    title="Claude 4.1 Opus"
+                    description="A powerful previous-generation model with a large context window, excelling at complex tasks."
+                    icon={<ClaudeIcon />}
+                    onSelect={() => onUpdateModel('puter_claude_opus_4_1')}
+                    isCurrent={currentModel === 'puter_claude_opus_4_1'}
+                />
             </div>
+        </div>
+
+        <div>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">OpenRouter</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <ModelProviderCard 
+                    title="Deepseek Chat"
+                    description="A powerful and capable model from Deepseek, available for free via OpenRouter."
+                    icon={<DeepseekIcon />}
+                    onSelect={() => onUpdateModel('openrouter_deepseek')}
+                    isCurrent={currentModel === 'openrouter_deepseek'}
+                />
+            </div>
+            <p className="text-xs text-gray-500 mt-2 px-1">
+                Note: OpenRouter models require you to set your <code className="bg-gray-200 px-1 rounded">OPENROUTER_API_KEY</code> in the 'Env' panel.
+            </p>
         </div>
     </div>
   );
