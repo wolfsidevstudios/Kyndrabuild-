@@ -1,12 +1,14 @@
 
 import React from 'react';
 import type { Integrations, IntegrationId } from '../../hooks/useIntegrations';
+import type { AttachmentContext } from '../../../App';
 
 interface PublicApisProps {
     integrations: Integrations;
     setIntegration: (key: IntegrationId, value: any) => void;
     isConnected: (key: IntegrationId) => boolean;
     onConfigured: (id: IntegrationId, name: string) => void;
+    onAttachContext: (context: AttachmentContext) => void;
 }
 
 const puterApis: { id: IntegrationId; name: string; description: string; icon: string }[] = [
@@ -32,57 +34,75 @@ const puterApis: { id: IntegrationId; name: string; description: string; icon: s
   { id: 'puter_youtube_downloader', name: 'YouTube Downloader', description: 'Download videos from YouTube.', icon: 'download' },
 ];
 
-// FIX: Define props with an interface and use React.FC to correctly type the component for use in a list with a `key` prop.
+const puterAiApis: { id: IntegrationId; name: string; description: string; icon: string }[] = [
+    { id: 'puter_ai_summarize', name: 'Text Summarization', description: 'Summarize long articles or texts into concise points.', icon: 'summarize' },
+    { id: 'puter_ai_sentiment', name: 'Sentiment Analysis', description: 'Determine the emotional tone of a piece of text.', icon: 'sentiment_satisfied' },
+    { id: 'puter_ai_text_to_speech', name: 'Text-to-Speech', description: 'Convert text into natural-sounding audio.', icon: 'volume_up' },
+    { id: 'puter_ai_speech_to_text', name: 'Speech-to-Text', description: 'Transcribe audio files into text.', icon: 'mic' },
+    { id: 'puter_ai_ocr', name: 'OCR', description: 'Extract text from images.', icon: 'document_scanner' },
+    { id: 'puter_ai_image_classification', name: 'Image Classification', description: 'Identify objects and concepts in images.', icon: 'image_search' },
+    { id: 'puter_ai_object_detection', name: 'Object Detection', description: 'Locate and identify multiple objects within an image.', icon: 'view_in_ar' },
+    { id: 'puter_ai_face_detection', name: 'Face Detection', description: 'Detect human faces in images.', icon: 'face' },
+    { id: 'puter_ai_image_to_text', name: 'Image-to-Text', description: 'Generate a caption or description for an image.', icon: 'image' },
+    { id: 'puter_ai_code_generation', name: 'Code Generation', description: 'Generate code snippets in various languages.', icon: 'terminal' },
+];
+
+
 interface ProviderCardProps {
     title: string;
     description: string;
     icon: React.ReactNode;
-    onToggle: () => void;
-    isEnabled: boolean;
+    onAttachContext: () => void;
 }
 
-const ProviderCard: React.FC<ProviderCardProps> = ({ title, description, icon, onToggle, isEnabled }) => (
+const ProviderCard: React.FC<ProviderCardProps> = ({ title, description, icon, onAttachContext }) => (
     <div className="bg-gray-100 p-6 rounded-2xl flex flex-col items-start">
         <div className="flex justify-between items-start w-full">
             {icon}
-            {isEnabled && <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Enabled</span>}
         </div>
         <h3 className="font-semibold text-lg text-gray-800 mt-4 mb-2">{title}</h3>
         <p className="text-gray-600 text-sm mb-4 flex-grow">{description}</p>
         <button
-            onClick={onToggle}
+            onClick={onAttachContext}
             className="w-full bg-white text-gray-800 py-2 rounded-lg text-sm font-semibold hover:bg-white/80 transition-colors mt-auto"
         >
-            {isEnabled ? 'Disable' : 'Enable'}
+            Add as Context
         </button>
     </div>
 );
 
-const PublicApis: React.FC<PublicApisProps> = ({ setIntegration, isConnected, onConfigured }) => {
-
-    const handleToggle = (id: IntegrationId, name: string) => {
-        const currentlyEnabled = isConnected(id);
-        setIntegration(id, { enabled: !currentlyEnabled });
-        if (!currentlyEnabled) {
-            onConfigured(id, name);
-        }
-    };
-
+const PublicApis: React.FC<PublicApisProps> = ({ onAttachContext }) => {
     return (
-        <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Public APIs (Puter.js)</h1>
-            <p className="text-gray-600 mb-6">Enable keyless public APIs. The AI can use these to build data-driven features.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {puterApis.map((api) => (
-                    <ProviderCard
-                        key={api.id}
-                        title={api.name}
-                        description={api.description}
-                        icon={<span className="material-symbols-outlined text-3xl text-gray-500">{api.icon}</span>}
-                        isEnabled={isConnected(api.id)}
-                        onToggle={() => handleToggle(api.id, api.name)}
-                    />
-                ))}
+        <div className="space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">AI APIs (Puter.js)</h1>
+                <p className="text-gray-600 mb-6">Add keyless AI APIs to your chat context. The AI can use these to build intelligent features.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {puterAiApis.map((api) => (
+                        <ProviderCard
+                            key={api.id}
+                            title={api.name}
+                            description={api.description}
+                            icon={<span className="material-symbols-outlined text-3xl text-gray-500">{api.icon}</span>}
+                            onAttachContext={() => onAttachContext({ id: api.id, name: api.name, type: 'api'})}
+                        />
+                    ))}
+                </div>
+            </div>
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">Public APIs (Puter.js)</h1>
+                <p className="text-gray-600 mb-6">Add keyless public APIs to your chat context. The AI can use these to build data-driven features.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {puterApis.map((api) => (
+                        <ProviderCard
+                            key={api.id}
+                            title={api.name}
+                            description={api.description}
+                            icon={<span className="material-symbols-outlined text-3xl text-gray-500">{api.icon}</span>}
+                            onAttachContext={() => onAttachContext({ id: api.id, name: api.name, type: 'api'})}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );

@@ -3,9 +3,19 @@ import React, { useState, useRef } from 'react';
 
 declare const puter: any;
 
+type ImageModel = 'gpt-image-1' | 'dall-e-3' | 'dall-e-2';
+
 interface ImageGeneratorPanelProps {
     onAttach: (name: string, url: string) => void;
 }
+
+const LoadingPlaceholder = () => (
+    <div className="aspect-square bg-white rounded relative overflow-hidden">
+        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-2xl opacity-50 animate-pulse"></div>
+        <div className="absolute -bottom-1/4 -right-1/4 w-2/3 h-2/3 bg-yellow-200 rounded-full filter blur-2xl opacity-40 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-1/3 h-1/3 bg-green-200 rounded-full filter blur-xl opacity-30 animate-pulse animation-delay-4000"></div>
+    </div>
+);
 
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ onAttach }) => {
     const [prompt, setPrompt] = useState('');
@@ -13,6 +23,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ onAttach }) =
     const [error, setError] = useState<string | null>(null);
     const [generatedImages, setGeneratedImages] = useState<string[]>([]);
     const [numImages, setNumImages] = useState(4);
+    const [imageModel, setImageModel] = useState<ImageModel>('gpt-image-1');
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
@@ -27,7 +38,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ onAttach }) =
             }
             
             const imagePromises = Array(numImages).fill(null).map(() => 
-                puter.ai.txt2img(prompt, { model: "gpt-image-1" })
+                puter.ai.txt2img(prompt, { model: imageModel })
             );
 
             const imageElements = await Promise.all(imagePromises);
@@ -77,23 +88,38 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ onAttach }) =
                         className="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-800"
                     />
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Number of images</label>
-                    <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4].map(num => (
-                            <button
-                                key={num}
-                                onClick={() => setNumImages(num)}
-                                className={`w-10 h-10 rounded-lg text-sm font-semibold transition-colors ${
-                                    numImages === num 
-                                        ? 'bg-gray-800 text-white' 
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                {num}
-                            </button>
-                        ))}
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Number of images</label>
+                        <div className="flex items-center gap-2">
+                            {[1, 2, 3, 4].map(num => (
+                                <button
+                                    key={num}
+                                    onClick={() => setNumImages(num)}
+                                    className={`w-10 h-10 rounded-lg text-sm font-semibold transition-colors ${
+                                        numImages === num 
+                                            ? 'bg-gray-800 text-white' 
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                     <div>
+                        <label htmlFor="image-model" className="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                        <select
+                            id="image-model"
+                            value={imageModel}
+                            onChange={(e) => setImageModel(e.target.value as ImageModel)}
+                            className="w-full bg-gray-100 border border-gray-200 rounded-lg h-10 px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800"
+                        >
+                            <option value="gpt-image-1">GPT Image</option>
+                            <option value="dall-e-3">DALL-E 3</option>
+                            <option value="dall-e-2">DALL-E 2</option>
+                        </select>
                     </div>
                 </div>
 
@@ -119,9 +145,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ onAttach }) =
                 <div 
                     className="grid grid-cols-2 gap-2 bg-gray-100 rounded-lg border border-gray-200 p-2 min-h-[200px]"
                 >
-                    {isLoading && Array(numImages).fill(null).map((_, i) => (
-                        <div key={i} className="aspect-square bg-gray-200 rounded animate-pulse"></div>
-                    ))}
+                    {isLoading && Array(numImages).fill(null).map((_, i) => <LoadingPlaceholder key={i} />)}
                     {!isLoading && generatedImages.length > 0 && generatedImages.map((imgSrc, i) => (
                         <button key={i} onClick={() => handleImageClick(imgSrc)} className="aspect-square rounded overflow-hidden transition-transform transform hover:scale-105 hover:ring-2 ring-blue-500 ring-offset-2">
                              <img src={imgSrc} alt={`Generated image ${i + 1}`} className="w-full h-full object-cover" />

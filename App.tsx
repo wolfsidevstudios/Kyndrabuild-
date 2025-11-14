@@ -16,6 +16,12 @@ import type { Integrations, IntegrationId } from './hooks/useIntegrations';
 
 type View = 'build' | 'planning' | 'building' | 'editor' | 'projects';
 
+export type AttachmentContext = {
+    id: IntegrationId;
+    name: string;
+    type: 'api';
+};
+
 // FIX: Export ChatMessage type so it can be imported by other components.
 export type ChatMessage = {
   author: 'user' | 'ai';
@@ -25,6 +31,7 @@ export type ChatMessage = {
     name: string;
     url: string; // data URL for preview
   };
+  context?: AttachmentContext[];
 };
 export type RequiredIntegration = {
     id: IntegrationId;
@@ -65,7 +72,13 @@ export type UiInstructions = {
   } | null;
 };
 
-export type AiModel = 'gemini' | 'chatgpt' | 'claude' | 'deepseek' | 'mistral' | 'qwen';
+export type AiModel = 
+  | 'gemini'
+  // Puter OpenAI Models
+  | 'puter_gpt_4o' | 'puter_gpt_4o_mini' | 'puter_gpt_5_nano' | 'puter_gpt_5_mini'
+  // Puter Claude Models
+  | 'puter_claude_sonnet_4_5' | 'puter_claude_haiku_4_5' | 'puter_claude_opus_4_1';
+
 export type ChatGptVersion = 'gpt-4o' | 'gpt-3.5-turbo';
 
 export type DeployState = {
@@ -117,6 +130,7 @@ const defaultUiInstructions: UiInstructions = {
 };
 
 declare const Babel: any;
+declare const puter: any;
 
 // Helper function to recursively find a file in the tree
 const findFileByPath = (node: FileNode, path: string): FileNode | null => {
@@ -402,9 +416,22 @@ function App() {
     fixContext?: { chatHistory: ChatMessage[] },
     currentSkippedIntegrations: IntegrationId[] = [],
     fileData: { mimeType: string; data: string } | null = null,
+    contextAttachments: AttachmentContext[] = [],
     customCredentials?: Record<string, string>,
   ) => {
     if (!projectFiles) return;
+
+    // Automatically enable integrations from context
+    if (contextAttachments.length > 0) {
+        contextAttachments.forEach(att => {
+            if (att.type === 'api') {
+                setIntegration(att.id, { enabled: true });
+            }
+        });
+        // Give state a moment to update before proceeding
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
     setAiTask({ status: 'thinking', explanation: '', files: [] });
     setRequiredIntegrations([]);
     setCustomIntegrationRequest(null);
@@ -425,13 +452,21 @@ function App() {
         
       const fixPreamble = `ATTENTION: Your previous code modifications resulted in a critical error. You must now act as an expert debugger. Analyze the error, review the context, identify the root cause, and provide a fix. The user's last request was: "${lastUserPrompt}". Be specific about what caused the error and how your changes fix it. Your goal is to produce working, error-free code that satisfies the user's original request.`;
       const userPreamble = `User request: "${prompt}"`;
+
+      const contextPreamble = contextAttachments.length > 0
+        ? `
+**Context Attachments:**
+The user has attached the following services as context for their request. You MUST enable and use these services to fulfill the request.
+${contextAttachments.map(att => `- ${att.name} (ID: ${att.id})`).join('\n')}
+`
+        : "";
       
       const integrationsPreamble = `The user has configured the following services. If the user's request requires any of these, you MUST use the provided credentials to initialize and integrate the respective SDKs into the application code. Do not show the credentials in the UI.
 
 IMPORTANT: For image fetching services like Pexels, you MUST create a serverless function in the 'src/api/' directory (e.g., 'src/api/images.ts') to handle the API request. This backend function will use the API key to fetch data from the external service and return only the necessary information (like image URLs) to the frontend. NEVER expose the Pexels API key in the frontend code.
 
-**Public Data Sources:**
-If the user has enabled public data sources like 'JSONPlaceholder' or 'Cat Facts API', you can use the \`fetch\` API to directly call their public endpoints from the frontend code. No API key is required for these.
+**Public Data Sources & APIs:**
+If the user has enabled public data sources (like 'JSONPlaceholder', 'Cat Facts API') or keyless APIs from Puter.js (like 'Weather', 'Currency Converter'), you can use the \`fetch\` API or the corresponding \`puter.*\` functions to directly call their public endpoints from the frontend code. No API key is required for these.
 
 **K-Indra Managed Authentication:**
 If the user's request involves authentication and they have configured 'kindra_google_auth' or 'kindra_github_auth', you must implement the full sign-in flow.
@@ -519,6 +554,7 @@ You are an expert mobile UI/UX designer specializing in creating stunning iOS ap
 ${projectType === 'mobile' ? mobilePreamble : ''}
 ${uiInstructionsPreamble}
 ${imagePreamble}
+${contextPreamble}
 ${integrationsPreamble}
 ${customCredentialsPreamble}
 ${skipPreamble}
@@ -530,20 +566,19 @@ ${allFiles}
 Based on the request, provide an explanation of your plan and the necessary file creations and modifications.
 For your explanation, use markdown formatting.
 `;
-
-      const jsonOutputPreamble = `Only respond with the JSON object. Do not add any markdown formatting.`;
-
-      const fullPrompt = `${basePrompt}\n${isFix ? fixPreamble : userPreamble}\n\n${jsonOutputPreamble}`;
-
-      const imageInfo = fileData 
-          ? { mimeType: fileData.mimeType, data: fileData.data }
-          : uiInstructions.imageReference 
-              ? dataUrlToMimeAndData(uiInstructions.imageReference.url) 
-              : null;
       
       let responseJson;
 
       if (aiModel === 'gemini') {
+        const jsonOutputPreamble = `Only respond with the JSON object. Do not add any markdown formatting.`;
+        const fullPrompt = `${basePrompt}\n${isFix ? fixPreamble : userPreamble}\n\n${jsonOutputPreamble}`;
+
+        const imageInfo = fileData 
+            ? { mimeType: fileData.mimeType, data: fileData.data }
+            : uiInstructions.imageReference 
+                ? dataUrlToMimeAndData(uiInstructions.imageReference.url) 
+                : null;
+        
         const model = (imageInfo) ? 'gemini-2.5-flash' : 'gemini-2.5-pro';
         const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [{ text: fullPrompt }];
         if (imageInfo) {
@@ -569,8 +604,32 @@ For your explanation, use markdown formatting.
         });
         responseJson = JSON.parse(response.text);
 
-      } else if (aiModel === 'chatgpt' || ['deepseek', 'mistral', 'qwen'].includes(aiModel)) {
-          // ... (existing model logic is complex and kept as is)
+      } else if (aiModel.startsWith('puter_')) {
+        const puterJsonPrompt = `You MUST respond with a single JSON object. Do not add any markdown formatting or any other text outside of the JSON object. The JSON object must have the following structure: { "explanation": "string", "requiredIntegrations": [], "customIntegrationRequest": null, "sqlScriptToRun": null, "files": [{ "path": "string", "content": "string", "action": "create" | "update" }] }`;
+        const fullPrompt = `${basePrompt}\n${isFix ? fixPreamble : userPreamble}\n\n${puterJsonPrompt}`;
+        const puterModelName = aiModel.replace('puter_', '').replace(/_/g, '-');
+
+        const puterChatArgs: any[] = [fullPrompt];
+        if (fileData) {
+            const dataUrl = `data:${fileData.mimeType};base64,${fileData.data}`;
+            puterChatArgs.push(dataUrl);
+        }
+        puterChatArgs.push({ model: puterModelName });
+
+        const response = await puter.ai.chat(...puterChatArgs);
+        
+        let responseText;
+        if (puterModelName.startsWith('claude')) {
+            responseText = response.message.content[0].text;
+        } else { // Assume GPT
+            responseText = response;
+        }
+
+        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : responseText;
+        
+        responseJson = JSON.parse(jsonString);
+
       } else {
         throw new Error(`Model ${aiModel} not implemented.`);
       }
@@ -656,10 +715,14 @@ For your explanation, use markdown formatting.
     } finally {
       setAiTask(null);
     }
-  }, [geminiAi, fileMap, integrations, isConnected, history, lastUserPrompt, projectFiles, uiInstructions, aiModel, chatgptVersion, projectType]);
+  }, [geminiAi, fileMap, integrations, isConnected, history, lastUserPrompt, projectFiles, uiInstructions, aiModel, chatgptVersion, projectType, setIntegration]);
 
-  const handleSendMessage = useCallback(async (message: string, attachmentFile?: File | { name: string, url: string }) => {
-    if ((!message.trim() && !attachmentFile) || aiTask) return;
+  const handleSendMessage = useCallback(async (
+    message: string, 
+    attachmentFile?: File | { name: string, url: string },
+    contextAttachments?: AttachmentContext[]
+  ) => {
+    if ((!message.trim() && !attachmentFile && (!contextAttachments || contextAttachments.length === 0)) || aiTask) return;
 
     let fileData: { mimeType: string; data: string } | null = null;
     let attachmentPreview: { name: string; url: string } | undefined = undefined;
@@ -689,7 +752,7 @@ For your explanation, use markdown formatting.
         }
     }
 
-    setChatHistory(prev => [...prev, { author: 'user', content: message, attachment: attachmentPreview }]);
+    setChatHistory(prev => [...prev, { author: 'user', content: message, attachment: attachmentPreview, context: contextAttachments }]);
     setLastUserPrompt(message);
     setFixAttempted(false);
     setSqlScript(null);
@@ -697,7 +760,7 @@ For your explanation, use markdown formatting.
     setCustomIntegrationRequest(null);
     setRequiredIntegrations([]);
     
-    await generateCode(message, false, undefined, [], fileData);
+    await generateCode(message, false, undefined, [], fileData, contextAttachments);
   }, [aiTask, generateCode]);
 
     // This effect triggers the initial code generation for a new project.

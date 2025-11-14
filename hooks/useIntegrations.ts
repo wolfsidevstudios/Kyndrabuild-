@@ -15,9 +15,6 @@ export type IntegrationId =
   | 'kindra_github_auth'
   | 'pexels_api'
   | 'sqlite_db'
-  | 'chatgpt_api'
-  | 'claude_api'
-  | 'openrouter_api'
   | 'public_jsonplaceholder'
   | 'public_cat_facts'
   | 'public_crypto_market'
@@ -40,7 +37,17 @@ export type IntegrationId =
   | 'puter_translation'
   | 'puter_image_manipulation'
   | 'puter_file_conversion'
-  | 'puter_youtube_downloader';
+  | 'puter_youtube_downloader'
+  | 'puter_ai_summarize'
+  | 'puter_ai_sentiment'
+  | 'puter_ai_text_to_speech'
+  | 'puter_ai_speech_to_text'
+  | 'puter_ai_ocr'
+  | 'puter_ai_image_classification'
+  | 'puter_ai_object_detection'
+  | 'puter_ai_face_detection'
+  | 'puter_ai_image_to_text'
+  | 'puter_ai_code_generation';
 
 export const validIntegrationIds: IntegrationId[] = [
   'firebase_auth',
@@ -55,9 +62,6 @@ export const validIntegrationIds: IntegrationId[] = [
   'kindra_github_auth',
   'pexels_api',
   'sqlite_db',
-  'chatgpt_api',
-  'claude_api',
-  'openrouter_api',
   'public_jsonplaceholder',
   'public_cat_facts',
   'public_crypto_market',
@@ -81,6 +85,16 @@ export const validIntegrationIds: IntegrationId[] = [
   'puter_image_manipulation',
   'puter_file_conversion',
   'puter_youtube_downloader',
+  'puter_ai_summarize',
+  'puter_ai_sentiment',
+  'puter_ai_text_to_speech',
+  'puter_ai_speech_to_text',
+  'puter_ai_ocr',
+  'puter_ai_image_classification',
+  'puter_ai_object_detection',
+  'puter_ai_face_detection',
+  'puter_ai_image_to_text',
+  'puter_ai_code_generation',
 ];
 
 export interface Integrations {
@@ -103,9 +117,6 @@ export interface Integrations {
   kindra_github_auth?: { clientId: string; clientSecret: string };
   pexels_api?: { apiKey: string };
   sqlite_db?: { enabled: boolean };
-  chatgpt_api?: { apiKey: string };
-  claude_api?: { apiKey: string };
-  openrouter_api?: { apiKey: string };
   public_jsonplaceholder?: { enabled: boolean };
   public_cat_facts?: { enabled: boolean };
   public_crypto_market?: { enabled: boolean };
@@ -129,6 +140,16 @@ export interface Integrations {
   puter_image_manipulation?: { enabled: boolean };
   puter_file_conversion?: { enabled: boolean };
   puter_youtube_downloader?: { enabled: boolean };
+  puter_ai_summarize?: { enabled: boolean };
+  puter_ai_sentiment?: { enabled: boolean };
+  puter_ai_text_to_speech?: { enabled: boolean };
+  puter_ai_speech_to_text?: { enabled: boolean };
+  puter_ai_ocr?: { enabled: boolean };
+  puter_ai_image_classification?: { enabled: boolean };
+  puter_ai_object_detection?: { enabled: boolean };
+  puter_ai_face_detection?: { enabled: boolean };
+  puter_ai_image_to_text?: { enabled: boolean };
+  puter_ai_code_generation?: { enabled: boolean };
 }
 
 const STORAGE_KEY = 'app-integrations';
@@ -185,6 +206,16 @@ export function useIntegrations() {
         case 'puter_image_manipulation':
         case 'puter_file_conversion':
         case 'puter_youtube_downloader':
+        case 'puter_ai_summarize':
+        case 'puter_ai_sentiment':
+        case 'puter_ai_text_to_speech':
+        case 'puter_ai_speech_to_text':
+        case 'puter_ai_ocr':
+        case 'puter_ai_image_classification':
+        case 'puter_ai_object_detection':
+        case 'puter_ai_face_detection':
+        case 'puter_ai_image_to_text':
+        case 'puter_ai_code_generation':
             return config.enabled === true;
         
         case 'firebase_auth':
@@ -216,9 +247,6 @@ export function useIntegrations() {
             return !!(config.clientId && config.clientSecret);
             
         case 'pexels_api':
-        case 'chatgpt_api':
-        case 'claude_api':
-        case 'openrouter_api':
             return !!config.apiKey;
             
         default:

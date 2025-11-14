@@ -1,5 +1,7 @@
 {
   "name": "Kyndra Mobile App Builder",
   "description": "An AI-powered mobile app builder that lets you create, edit, and preview apps for phones and tablets in a streamlined, mobile-first interface.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

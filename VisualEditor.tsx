@@ -16,8 +16,6 @@ type Attachment =
   | { type: 'file', data: File | { name: string, url: string } }
   | { type: 'context', data: AttachmentContext };
 
-declare const puter: any;
-
 interface EditorPageProps {
   files: Map<string, FileNode>;
   entryPoint: string;
@@ -65,45 +63,6 @@ const EditorPage: React.FC<EditorPageProps> = (props) => {
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dist = useRef(0);
-
-    const [isRecording, setIsRecording] = useState(false);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const audioChunksRef = useRef<Blob[]>([]);
-
-    const handleMicClick = async () => {
-        if (isRecording) {
-            mediaRecorderRef.current?.stop();
-            setIsRecording(false);
-        } else {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorderRef.current = new MediaRecorder(stream);
-                audioChunksRef.current = [];
-
-                mediaRecorderRef.current.ondataavailable = (event) => {
-                    audioChunksRef.current.push(event.data);
-                };
-
-                mediaRecorderRef.current.onstop = async () => {
-                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                    try {
-                        const result = await puter.ai.speech2txt(audioBlob);
-                        setChatInput(prev => (prev + ' ' + (result.text || '')).trim());
-                    } catch (e) {
-                        console.error("Transcription failed", e);
-                        alert("Voice transcription failed. Please try again.");
-                    }
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                mediaRecorderRef.current.start();
-                setIsRecording(true);
-            } catch (err) {
-                console.error("Microphone access was denied.", err);
-                alert("Microphone access is required for this feature. Please allow it in your browser settings.");
-            }
-        }
-    };
 
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
         if (e.touches.length === 2) {
@@ -244,9 +203,6 @@ const EditorPage: React.FC<EditorPageProps> = (props) => {
                              <button type="button" onClick={() => fileInputRef.current?.click()} className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-gray-200">
                                 <span className="material-symbols-outlined">attach_file</span>
                              </button>
-                             <button type="button" onClick={handleMicClick} className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isRecording ? 'bg-red-100' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                                <svg className={`w-5 h-5 ${isRecording ? 'text-red-500' : 'text-gray-700'}`} viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 2c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2s2-.9 2-2V4c0-1.1-.9-2-2-2Zm0-1.33c1.84 0 3.33 1.49 3.33 3.33v4c0 1.84-1.49 3.33-3.33 3.33s-3.33-1.49-3.33-3.33V4c0-1.84 1.49-3.33 3.33-3.33ZM1.46 9.31l1.31-.26c.49 2.18 2.65 4.02 5.23 4.02s4.74-1.84 5.23-4.29l1.31.26c-.6 3.05-3.3 5.36-6.54 5.36s-5.93-2.3-6.54-5.36Z"/></svg>
-                             </button>
                             <input 
                                 type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
                                 placeholder="Describe a change..."
@@ -311,19 +267,14 @@ const EditorPage: React.FC<EditorPageProps> = (props) => {
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyDown={handleDesktopKeyDown}
                             placeholder="Describe a change to your app..."
-                            className="w-full bg-white/80 backdrop-blur-md border border-gray-300/50 rounded-2xl shadow-xl p-4 pl-28 pr-14 resize-none text-base focus:ring-2 focus:ring-gray-800 focus:outline-none transition-all"
+                            className="w-full bg-white/80 backdrop-blur-md border border-gray-300/50 rounded-2xl shadow-xl p-4 pl-14 pr-14 resize-none text-base focus:ring-2 focus:ring-gray-800 focus:outline-none transition-all"
                             rows={3}
                             disabled={isLoading}
                         />
                          <input type="file" ref={fileInputRef} onChange={handleFileSelected} className="hidden" accept="image/*" />
-                         <div className="absolute left-4 bottom-4 flex items-center gap-2">
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-10 h-10 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-gray-200 transition-colors">
-                                <span className="material-symbols-outlined">attach_file</span>
-                            </button>
-                            <button type="button" onClick={handleMicClick} className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isRecording ? 'bg-red-100' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                                <svg className={`w-5 h-5 ${isRecording ? 'text-red-500' : 'text-gray-700'}`} viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 2c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2s2-.9 2-2V4c0-1.1-.9-2-2-2Zm0-1.33c1.84 0 3.33 1.49 3.33 3.33v4c0 1.84-1.49 3.33-3.33 3.33s-3.33-1.49-3.33-3.33V4c0-1.84 1.49-3.33 3.33-3.33ZM1.46 9.31l1.31-.26c.49 2.18 2.65 4.02 5.23 4.02s4.74-1.84 5.23-4.29l1.31.26c-.6 3.05-3.3 5.36-6.54 5.36s-5.93-2.3-6.54-5.36Z"/></svg>
-                            </button>
-                         </div>
+                         <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute left-4 bottom-4 w-10 h-10 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-gray-200 transition-colors">
+                            <span className="material-symbols-outlined">attach_file</span>
+                         </button>
                         <button type="submit" disabled={isLoading || (!chatInput.trim() && attachments.length === 0)} className="absolute right-4 bottom-4 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:bg-gray-300 hover:bg-gray-700 transition-colors">
                             <span className="material-symbols-outlined">arrow_upward</span>
                         </button>
